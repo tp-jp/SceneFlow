@@ -1,19 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TpLab.SceneFlow.Editor.Job;
 
 namespace TpLab.SceneFlow.Editor.Core
 {
     /// <summary>
-    /// シーンフローパスの依存関係グラフ
+    /// ノードインターフェース
     /// </summary>
-    internal sealed class SceneFlowGraph
+    internal interface IGraphNode
     {
-        readonly Dictionary<string, SceneFlowJobNode> _nodes;
+        string Id { get; }
+        HashSet<string> RunAfter { get; }
+        HashSet<string> RunBefore { get; }
+    }
+
+    /// <summary>
+    /// シーンフローの依存関係グラフ（汎用版）
+    /// </summary>
+    internal sealed class SceneFlowGraph<T> where T : IGraphNode
+    {
+        readonly Dictionary<string, T> _nodes;
         readonly Dictionary<string, HashSet<string>> _edges = new();
 
-        public SceneFlowGraph(IEnumerable<SceneFlowJobNode> nodes)
+        public SceneFlowGraph(IEnumerable<T> nodes)
         {
             _nodes = nodes.ToDictionary(n => n.Id);
             BuildEdges();
@@ -27,14 +36,26 @@ namespace TpLab.SceneFlow.Editor.Core
                     _edges[node.Id] = new();
 
                 foreach (var after in node.RunAfter)
-                    _edges[after].Add(node.Id);
+                {
+                    if (_nodes.ContainsKey(after))
+                    {
+                        if (!_edges.ContainsKey(after))
+                            _edges[after] = new();
+                        _edges[after].Add(node.Id);
+                    }
+                }
 
                 foreach (var before in node.RunBefore)
-                    _edges[node.Id].Add(before);
+                {
+                    if (_nodes.ContainsKey(before))
+                    {
+                        _edges[node.Id].Add(before);
+                    }
+                }
             }
         }
 
-        public IReadOnlyList<SceneFlowJobNode> Sort()
+        public IReadOnlyList<T> Sort()
         {
             var indegree = _nodes.Keys.ToDictionary(k => k, _ => 0);
 
@@ -45,7 +66,7 @@ namespace TpLab.SceneFlow.Editor.Core
             var queue = new Queue<string>(
                 indegree.Where(p => p.Value == 0).Select(p => p.Key));
 
-            var result = new List<SceneFlowJobNode>();
+            var result = new List<T>();
 
             while (queue.Count > 0)
             {
@@ -60,9 +81,10 @@ namespace TpLab.SceneFlow.Editor.Core
             }
 
             if (result.Count != _nodes.Count)
-                throw new Exception("Circular SceneFlow pass dependency");
+                throw new Exception("Circular dependency detected in SceneFlow graph");
 
             return result;
         }
     }
 }
+
