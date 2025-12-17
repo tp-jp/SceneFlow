@@ -1,6 +1,48 @@
-# VPM Package Template
+# SceneFlow
 
-Starter for making Packages, including automation for building and publishing them.
+Unity の「ビルド時処理」を構造化・順序保証するための最小パイプラインフレームワーク
+
+**SceneFlow = Build-time orchestration**
+
+---
+
+## 概要
+
+SceneFlow は Unity のビルド前処理を Pass 単位で整理し、依存関係に基づいて実行順序を自動解決するフレームワークです。
+
+- ✅ **Pass ベース**: 1 Pass = 1 責務
+- ✅ **型安全な依存関係**: `RunAfter(typeof(OtherPass))`
+- ✅ **自動順序解決**: トポロジカルソート
+- ✅ **最小 API**: シンプルで学習コストが低い
+
+詳細は [パッケージ内の README](./Packages/com.tplab.sceneflow/README.md) を参照してください。
+
+---
+
+## クイックスタート
+
+```csharp
+using TpLab.SceneFlow.Editor.Core;
+using TpLab.SceneFlow.Editor.Pass;
+
+public class MyScenePass : IScenePass
+{
+    public void Execute(SceneFlowContext context)
+    {
+        // シーン処理を実装
+        // context.Scene でシーンにアクセス
+        // context.Report でビルドレポートにアクセス
+    }
+}
+```
+
+ビルド時に自動実行されます。
+
+---
+
+## VPM Package Template
+
+This project is based on the VPM Package Template for building and publishing Unity packages.
 
 Once you're all set up, you'll be able to push changes to this repository and have .zip and .unitypackage versions automatically generated, and a listing made which works in the VPM for delivering updates for this package. If you want to make a listing with a variety of packages, check out our [template-package-listing](https://github.com/vrchat-community/template-package-listing) repo.
 

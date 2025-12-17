@@ -1,4 +1,6 @@
+using System.Linq;
 using TpLab.SceneFlow.Editor.Internal;
+using TpLab.SceneFlow.Editor.Pass;
 using UnityEditor;
 
 namespace TpLab.SceneFlow.Editor.Bootstrap
@@ -13,20 +15,35 @@ namespace TpLab.SceneFlow.Editor.Bootstrap
         {
             Logger.Log("SceneFlow has been initialized.");
             
-            // ジョブの事前検証などをここで行うことができます
-            ValidateJobs();
+            // Pass の事前検証
+            ValidatePasses();
         }
 
-        static void ValidateJobs()
+        static void ValidatePasses()
         {
-            var jobs = Discovery.SceneFlowJobDiscovery.Discover();
-            var count = 0;
-            foreach (var job in jobs)
+            var buildPasses = PassDiscovery.DiscoverBuildPasses().ToList();
+            var projectPasses = PassDiscovery.DiscoverProjectPasses().ToList();
+            var scenePasses = PassDiscovery.DiscoverScenePasses().ToList();
+            
+            var total = buildPasses.Count + projectPasses.Count + scenePasses.Count;
+            
+            Logger.Log($"Total {total} pass(es) discovered:");
+            Logger.Log($"  - BuildPass: {buildPasses.Count}");
+            Logger.Log($"  - ProjectPass: {projectPasses.Count}");
+            Logger.Log($"  - ScenePass: {scenePasses.Count}");
+            
+            foreach (var pass in buildPasses)
             {
-                count++;
-                Logger.LogDebug($"Found job: {job.JobId}");
+                Logger.LogDebug($"  [Build] {pass.GetType().Name}");
             }
-            Logger.Log($"Total {count} job(s) discovered.");
+            foreach (var pass in projectPasses)
+            {
+                Logger.LogDebug($"  [Project] {pass.GetType().Name}");
+            }
+            foreach (var pass in scenePasses)
+            {
+                Logger.LogDebug($"  [Scene] {pass.GetType().Name}");
+            }
         }
     }
 }

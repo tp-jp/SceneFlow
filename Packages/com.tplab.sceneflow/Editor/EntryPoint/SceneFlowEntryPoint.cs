@@ -11,7 +11,7 @@ namespace TpLab.SceneFlow.Editor.EntryPoint
 
         public void OnProcessScene(Scene scene, BuildReport report)
         {
-            SceneFlowPipeline.Run(scene, report);
+            SceneFlowPipeline.Run(scene);
         }
     }
 }

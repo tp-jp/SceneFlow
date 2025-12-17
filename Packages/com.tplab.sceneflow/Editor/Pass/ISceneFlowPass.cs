@@ -1,40 +1,78 @@
+using System;
 using System.Collections.Generic;
 using TpLab.SceneFlow.Editor.Core;
-using UnityEditor.Build.Reporting;
-using UnityEngine.SceneManagement;
 
 namespace TpLab.SceneFlow.Editor.Pass
 {
     /// <summary>
-    /// シーンフローパスのインターフェース
+    /// ビルドパス基底インターフェース
+    /// ビルド全体で一度だけ実行される処理
+    /// 例: 環境検証、設定ファイル生成、事前準備、後処理
     /// </summary>
-    public interface ISceneFlowPass
+    public interface IBuildPass
     {
         /// <summary>
-        /// パスを一意に識別する ID
+        /// この Pass より「後」に実行されるべき Pass 型
         /// </summary>
-        string Id { get; }
+        IEnumerable<Type> RunAfter => Array.Empty<Type>();
 
         /// <summary>
-        /// パスのフェーズ
+        /// この Pass より「前」に実行されるべき Pass 型
         /// </summary>
-        SceneFlowPhase Phase { get; }
+        IEnumerable<Type> RunBefore => Array.Empty<Type>();
 
         /// <summary>
-        /// この Pass より「後」に実行されるべき Pass ID
+        /// ビルド処理を実行する
         /// </summary>
-        IEnumerable<string> RunAfter { get; }
+        /// <param name="context">SceneFlow 実行コンテキスト</param>
+        void Execute(SceneFlowContext context);
+    }
+
+    /// <summary>
+    /// プロジェクトパス基底インターフェース
+    /// プロジェクト全体に対する処理
+    /// 例: ScriptableObject 生成、共通アセットの更新、キャッシュ構築
+    /// </summary>
+    public interface IProjectPass
+    {
+        /// <summary>
+        /// この Pass より「後」に実行されるべき Pass 型
+        /// </summary>
+        IEnumerable<Type> RunAfter => Array.Empty<Type>();
 
         /// <summary>
-        /// この Pass より「前」に実行されるべき Pass ID
+        /// この Pass より「前」に実行されるべき Pass 型
         /// </summary>
-        IEnumerable<string> RunBefore { get; }
+        IEnumerable<Type> RunBefore => Array.Empty<Type>();
 
         /// <summary>
-        /// シーン処理を実行する。
+        /// プロジェクト処理を実行する
         /// </summary>
-        /// <param name="scene">シーン</param>
-        /// <param name="report">ビルドレポート</param>
-        void Execute(Scene scene, BuildReport report);
+        /// <param name="context">SceneFlow 実行コンテキスト</param>
+        void Execute(SceneFlowContext context);
+    }
+
+    /// <summary>
+    /// シーンパス基底インターフェース
+    /// シーン単位の処理
+    /// VRChat では実質「ワールド = 1 シーン」
+    /// </summary>
+    public interface IScenePass
+    {
+        /// <summary>
+        /// この Pass より「後」に実行されるべき Pass 型
+        /// </summary>
+        IEnumerable<Type> RunAfter => Array.Empty<Type>();
+
+        /// <summary>
+        /// この Pass より「前」に実行されるべき Pass 型
+        /// </summary>
+        IEnumerable<Type> RunBefore => Array.Empty<Type>();
+
+        /// <summary>
+        /// シーン処理を実行する
+        /// </summary>
+        /// <param name="context">SceneFlow 実行コンテキスト</param>
+        void Execute(SceneFlowContext context);
     }
 }

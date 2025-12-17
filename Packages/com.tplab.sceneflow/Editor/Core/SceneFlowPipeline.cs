@@ -1,122 +1,134 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using TpLab.SceneFlow.Editor.Builder;
-using TpLab.SceneFlow.Editor.Discovery;
 using TpLab.SceneFlow.Editor.Internal;
 using TpLab.SceneFlow.Editor.Pass;
-using UnityEditor.Build.Reporting;
 using UnityEngine.SceneManagement;
 
 namespace TpLab.SceneFlow.Editor.Core
 {
     /// <summary>
-    /// シーンフローパイプライン
+    /// SceneFlow パイプライン
+    /// Build-time orchestration フレームワーク
+    /// 実行順序: IBuildPass → IProjectPass → IScenePass
     /// </summary>
     public static class SceneFlowPipeline
     {
         /// <summary>
-        /// シーン処理パイプラインを実行する。
+        /// Pass ベースのパイプラインを実行する
         /// </summary>
         /// <param name="scene">シーン</param>
-        /// <param name="report">ビルドレポート</param>
-        public static void Run(Scene scene, BuildReport report)
+        public static void Run(Scene scene)
         {
-            var context = new SceneFlowContext(scene, report);
-            
-            // ジョブを発見
-            var jobs = SceneFlowJobDiscovery
-                .Discover()
-                .ToList();
+            Logger.Log("SceneFlow Pipeline started");
 
-            // 各ジョブからステップを収集
-            var allSteps = new List<SceneFlowStep>();
-            foreach (var job in jobs)
+            try
             {
-                var jobBuilder = new SceneFlowJobBuilder();
-                job.Configure(jobBuilder);
-                allSteps.AddRange(jobBuilder.Build());
+                var context = new SceneFlowContext(scene);
+
+                // 1. IBuildPass: ビルド全体で一度だけ実行
+                ExecuteBuildPasses(context);
+
+                // 2. IProjectPass: プロジェクト全体に対する処理
+                ExecuteProjectPasses(context);
+
+                // 3. IScenePass: シーン単位の処理
+                ExecuteScenePasses(context);
+
+                Logger.Log("SceneFlow Pipeline completed");
             }
-
-            // ジョブIDをステップIDに展開
-            ExpandJobDependenciesToSteps(allSteps);
-
-            // フェーズごとにステップを実行
-            ExecuteStepsByPhase(allSteps, context);
+            catch (Exception ex)
+            {
+                Logger.LogError($"SceneFlow Pipeline failed: {ex}");
+                throw;
+            }
         }
 
-        static void ExpandJobDependenciesToSteps(List<SceneFlowStep> steps)
+        /// <summary>
+        /// IBuildPass を実行
+        /// </summary>
+        static void ExecuteBuildPasses(SceneFlowContext context)
         {
-            // ジョブIDからステップIDへのマッピングを作成
-            var jobToSteps = new Dictionary<string, List<string>>();
-            
-            foreach (var step in steps)
-            {
-                // ステップIDからジョブIDを抽出（例: "MyJob.Step1" -> "MyJob"）
-                var lastDotIndex = step.Id.LastIndexOf('.');
-                if (lastDotIndex > 0)
-                {
-                    var jobId = step.Id.Substring(0, lastDotIndex);
-                    if (!jobToSteps.ContainsKey(jobId))
-                    {
-                        jobToSteps[jobId] = new List<string>();
-                    }
-                    jobToSteps[jobId].Add(step.Id);
-                }
-            }
+            var passes = PassDiscovery.DiscoverBuildPasses().ToList();
+            if (passes.Count == 0) return;
 
-            // 各ステップのジョブID依存をステップID依存に展開
-            foreach (var step in steps)
-            {
-                // RunAfterJobs -> RunAfterSteps
-                foreach (var jobId in step.RunAfterJobs)
-                {
-                    if (jobToSteps.TryGetValue(jobId, out var jobSteps))
-                    {
-                        step.RunAfterSteps.UnionWith(jobSteps);
-                    }
-                }
+            Logger.Log($"Executing {passes.Count} BuildPass(es)");
 
-                // RunBeforeJobs -> RunBeforeSteps
-                foreach (var jobId in step.RunBeforeJobs)
+            var sorted = PassSorter.Sort(
+                passes,
+                p => p.RunAfter,
+                p => p.RunBefore);
+
+            foreach (var pass in sorted)
+            {
+                try
                 {
-                    if (jobToSteps.TryGetValue(jobId, out var jobSteps))
-                    {
-                        step.RunBeforeSteps.UnionWith(jobSteps);
-                    }
+                    Logger.Log($"  → {pass.GetType().Name}");
+                    pass.Execute(context);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Error in BuildPass {pass.GetType().Name}: {ex}");
+                    throw;
                 }
             }
         }
-        static void ExecuteStepsByPhase(
-            List<SceneFlowStep> allSteps,
-            SceneFlowContext context)
+
+        /// <summary>
+        /// IProjectPass を実行
+        /// </summary>
+        static void ExecuteProjectPasses(SceneFlowContext context)
         {
-            // フェーズごとにグループ化
-            var stepsByPhase = allSteps
-                .GroupBy(s => s.Phase)
-                .OrderBy(g => g.Key)
-                .ToList();
+            var passes = PassDiscovery.DiscoverProjectPasses().ToList();
+            if (passes.Count == 0) return;
 
-            foreach (var phaseGroup in stepsByPhase)
+            Logger.Log($"Executing {passes.Count} ProjectPass(es)");
+
+            var sorted = PassSorter.Sort(
+                passes,
+                p => p.RunAfter,
+                p => p.RunBefore);
+
+            foreach (var pass in sorted)
             {
-                var phaseSteps = phaseGroup.ToList();
-                
-                // このフェーズのステップをトポロジカルソート
-                var stepNodes = phaseSteps.Select(s => new SceneFlowStepNode(s)).ToList();
-                var graph = new SceneFlowGraph<SceneFlowStepNode>(stepNodes);
-                var orderedSteps = graph.Sort();
-
-                // ステップを実行
-                foreach (var stepNode in orderedSteps)
+                try
                 {
-                    try
-                    {
-                        stepNode.Step.Execute(context);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.LogError($"Error in step {stepNode.Id}: {ex}");
-                    }
+                    Logger.Log($"  → {pass.GetType().Name}");
+                    pass.Execute(context);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Error in ProjectPass {pass.GetType().Name}: {ex}");
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// IScenePass を実行
+        /// </summary>
+        static void ExecuteScenePasses(SceneFlowContext context)
+        {
+            var passes = PassDiscovery.DiscoverScenePasses().ToList();
+            if (passes.Count == 0) return;
+
+            Logger.Log($"Executing {passes.Count} ScenePass(es) for scene: {context.Scene.name}");
+
+            var sorted = PassSorter.Sort(
+                passes,
+                p => p.RunAfter,
+                p => p.RunBefore);
+
+            foreach (var pass in sorted)
+            {
+                try
+                {
+                    Logger.Log($"  → {pass.GetType().Name}");
+                    pass.Execute(context);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Error in ScenePass {pass.GetType().Name}: {ex}");
+                    throw;
                 }
             }
         }

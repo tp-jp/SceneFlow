@@ -16,7 +16,7 @@ namespace TpLab.SceneFlow.Editor.Internal
         /// </summary>
         public static void LogDebug(object message)
         {
-            Debug.Log($"{Prefix} [DEBUG] {message}");
+            Debug.Log($"{Prefix} {message}");
         }
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace TpLab.SceneFlow.Editor.Internal
         /// </summary>
         public static void LogDebug(object message, Object context)
         {
-            Debug.Log($"{Prefix} [DEBUG] {message}", context);
+            Debug.Log($"{Prefix} {message}", context);
         }
 
         /// <summary>

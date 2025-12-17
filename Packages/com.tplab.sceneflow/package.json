@@ -3,7 +3,7 @@
   "displayName": "SceneFlow",
   "version": "1.0.0",
   "unity": "2022.3",
-  "description": "",
+  "description": "Build-time orchestration framework for Unity. Organize and order build-time processing with Pass-based structure and dependency resolution.",
   "gitDependencies": {},
   "vpmDependencies": {},
   "author": {
