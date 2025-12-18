@@ -34,7 +34,10 @@ namespace TpLab.SceneFlow.Editor.Pass
             return DiscoverPasses<IScenePass>();
         }
 
-        static IEnumerable<T> DiscoverPasses<T>()
+        /// <summary>
+        /// IPass を実装した Pass をすべて検出する（汎用メソッド）
+        /// </summary>
+        public static IEnumerable<T> DiscoverPasses<T>() where T : IPass
         {
             var interfaceType = typeof(T);
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();

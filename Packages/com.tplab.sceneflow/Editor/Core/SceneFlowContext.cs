@@ -1,3 +1,4 @@
+using UnityEditor.Build.Reporting;
 using UnityEngine.SceneManagement;
 
 namespace TpLab.SceneFlow.Editor.Core
@@ -14,7 +15,7 @@ namespace TpLab.SceneFlow.Editor.Core
         public Scene Scene { get; }
 
         /// <summary>
-        /// SceneFlowContext を初期化
+        /// コンストラクタ
         /// </summary>
         /// <param name="scene">処理対象のシーン</param>
         public SceneFlowContext(Scene scene)

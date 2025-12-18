@@ -42,9 +42,9 @@ namespace TpLab.SceneFlow.Editor.Tools
             EditorGUILayout.EndScrollView();
         }
 
-        void DrawPassSection<T>(string title, System.Collections.Generic.List<T> passes)
+        void DrawPassSection<T>(string sectionTitle, System.Collections.Generic.List<T> passes) where T : IPass
         {
-            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(sectionTitle, EditorStyles.boldLabel);
 
             if (passes.Count == 0)
             {
@@ -57,29 +57,39 @@ namespace TpLab.SceneFlow.Editor.Tools
             try
             {
                 // 依存関係でソート
-                var sorted = typeof(T) == typeof(IBuildPass)
-                    ? PassSorter.Sort(passes.Cast<IBuildPass>(), p => p.RunAfter, p => p.RunBefore).Cast<T>().ToList()
-                    : typeof(T) == typeof(IProjectPass)
-                        ? PassSorter.Sort(passes.Cast<IProjectPass>(), p => p.RunAfter, p => p.RunBefore).Cast<T>().ToList()
-                        : PassSorter.Sort(passes.Cast<IScenePass>(), p => p.RunAfter, p => p.RunBefore).Cast<T>().ToList();
+                var sorted = PassSorter.Sort(passes);
 
-                for (int i = 0; i < sorted.Count; i++)
+                for (var i = 0; i < sorted.Count; i++)
                 {
                     var pass = sorted[i];
                     EditorGUILayout.LabelField($"  {i + 1}. {pass.GetType().Name}");
 
-                    // 依存関係を表示
-                    var runAfter = GetRunAfter(pass);
-                    var runBefore = GetRunBefore(pass);
+                    // 依存関係を表示（型ベース）
+                    var runAfterTypes = pass.RunAfter.ToList();
+                    var runBeforeTypes = pass.RunBefore.ToList();
+                    
+                    // 依存関係を表示（文字列ベース）
+                    var runAfterNames = pass.RunAfterNames.ToList();
+                    var runBeforeNames = pass.RunBeforeNames.ToList();
 
-                    if (runAfter.Any())
+                    if (runAfterTypes.Any())
                     {
-                        EditorGUILayout.LabelField($"     → After: {string.Join(", ", runAfter.Select(t => t.Name))}", EditorStyles.miniLabel);
+                        EditorGUILayout.LabelField($"     → After: {string.Join(", ", runAfterTypes.Select(t => t.Name))}", EditorStyles.miniLabel);
                     }
 
-                    if (runBefore.Any())
+                    if (runAfterNames.Any())
                     {
-                        EditorGUILayout.LabelField($"     → Before: {string.Join(", ", runBefore.Select(t => t.Name))}", EditorStyles.miniLabel);
+                        EditorGUILayout.LabelField($"     → After (by name): {string.Join(", ", runAfterNames)}", EditorStyles.miniLabel);
+                    }
+
+                    if (runBeforeTypes.Any())
+                    {
+                        EditorGUILayout.LabelField($"     → Before: {string.Join(", ", runBeforeTypes.Select(t => t.Name))}", EditorStyles.miniLabel);
+                    }
+
+                    if (runBeforeNames.Any())
+                    {
+                        EditorGUILayout.LabelField($"     → Before (by name): {string.Join(", ", runBeforeNames)}", EditorStyles.miniLabel);
                     }
                 }
             }
@@ -87,22 +97,6 @@ namespace TpLab.SceneFlow.Editor.Tools
             {
                 EditorGUILayout.HelpBox($"Error sorting passes: {ex.Message}", MessageType.Error);
             }
-        }
-
-        System.Collections.Generic.IEnumerable<System.Type> GetRunAfter(object pass)
-        {
-            if (pass is IBuildPass buildPass) return buildPass.RunAfter;
-            if (pass is IProjectPass projectPass) return projectPass.RunAfter;
-            if (pass is IScenePass scenePass) return scenePass.RunAfter;
-            return System.Linq.Enumerable.Empty<System.Type>();
-        }
-
-        System.Collections.Generic.IEnumerable<System.Type> GetRunBefore(object pass)
-        {
-            if (pass is IBuildPass buildPass) return buildPass.RunBefore;
-            if (pass is IProjectPass projectPass) return projectPass.RunBefore;
-            if (pass is IScenePass scenePass) return scenePass.RunBefore;
-            return System.Linq.Enumerable.Empty<System.Type>();
         }
     }
 }

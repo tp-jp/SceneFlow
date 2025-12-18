@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using TpLab.SceneFlow.Editor.Internal;
 using TpLab.SceneFlow.Editor.Pass;
+using UnityEditor.Build.Reporting;
 using UnityEngine.SceneManagement;
 
 namespace TpLab.SceneFlow.Editor.Core
@@ -26,13 +27,13 @@ namespace TpLab.SceneFlow.Editor.Core
                 var context = new SceneFlowContext(scene);
 
                 // 1. IBuildPass: ビルド全体で一度だけ実行
-                ExecuteBuildPasses(context);
+                ExecutePasses<IBuildPass>("BuildPass", context);
 
                 // 2. IProjectPass: プロジェクト全体に対する処理
-                ExecuteProjectPasses(context);
+                ExecutePasses<IProjectPass>("ProjectPass", context);
 
                 // 3. IScenePass: シーン単位の処理
-                ExecuteScenePasses(context);
+                ExecutePasses<IScenePass>("ScenePass", context, $"for scene: {scene.name}");
 
                 Logger.Log("SceneFlow Pipeline completed");
             }
@@ -44,49 +45,26 @@ namespace TpLab.SceneFlow.Editor.Core
         }
 
         /// <summary>
-        /// IBuildPass を実行
+        /// Pass を実行する
         /// </summary>
-        static void ExecuteBuildPasses(SceneFlowContext context)
+        /// <typeparam name="T">Pass の型</typeparam>
+        /// <param name="passTypeName">Pass の種類名（ログ用）</param>
+        /// <param name="context">実行コンテキスト</param>
+        /// <param name="additionalInfo">追加情報（ログ用）</param>
+        static void ExecutePasses<T>(string passTypeName, SceneFlowContext context, string additionalInfo = null)
+            where T : IPass
         {
-            var passes = PassDiscovery.DiscoverBuildPasses().ToList();
-            if (passes.Count == 0) return;
+            var passList = PassDiscovery.DiscoverPasses<T>().ToList();
+            if (passList.Count == 0) return;
 
-            Logger.Log($"Executing {passes.Count} BuildPass(es)");
-
-            var sorted = PassSorter.Sort(
-                passes,
-                p => p.RunAfter,
-                p => p.RunBefore);
-
-            foreach (var pass in sorted)
+            var logMessage = $"Executing {passList.Count} {passTypeName}(es)";
+            if (!string.IsNullOrEmpty(additionalInfo))
             {
-                try
-                {
-                    Logger.Log($"  → {pass.GetType().Name}");
-                    pass.Execute(context);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"Error in BuildPass {pass.GetType().Name}: {ex}");
-                    throw;
-                }
+                logMessage += $" {additionalInfo}";
             }
-        }
+            Logger.Log(logMessage);
 
-        /// <summary>
-        /// IProjectPass を実行
-        /// </summary>
-        static void ExecuteProjectPasses(SceneFlowContext context)
-        {
-            var passes = PassDiscovery.DiscoverProjectPasses().ToList();
-            if (passes.Count == 0) return;
-
-            Logger.Log($"Executing {passes.Count} ProjectPass(es)");
-
-            var sorted = PassSorter.Sort(
-                passes,
-                p => p.RunAfter,
-                p => p.RunBefore);
+            var sorted = PassSorter.Sort(passList);
 
             foreach (var pass in sorted)
             {
@@ -97,37 +75,7 @@ namespace TpLab.SceneFlow.Editor.Core
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError($"Error in ProjectPass {pass.GetType().Name}: {ex}");
-                    throw;
-                }
-            }
-        }
-
-        /// <summary>
-        /// IScenePass を実行
-        /// </summary>
-        static void ExecuteScenePasses(SceneFlowContext context)
-        {
-            var passes = PassDiscovery.DiscoverScenePasses().ToList();
-            if (passes.Count == 0) return;
-
-            Logger.Log($"Executing {passes.Count} ScenePass(es) for scene: {context.Scene.name}");
-
-            var sorted = PassSorter.Sort(
-                passes,
-                p => p.RunAfter,
-                p => p.RunBefore);
-
-            foreach (var pass in sorted)
-            {
-                try
-                {
-                    Logger.Log($"  → {pass.GetType().Name}");
-                    pass.Execute(context);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"Error in ScenePass {pass.GetType().Name}: {ex}");
+                    Logger.LogError($"Error in {passTypeName} {pass.GetType().Name}: {ex}");
                     throw;
                 }
             }

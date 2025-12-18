@@ -13,13 +13,16 @@ namespace TpLab.SceneFlow.Editor.Pass
         /// <summary>
         /// Pass インスタンスのリストを依存関係に基づいてソートする
         /// </summary>
-        public static List<T> Sort<T>(IEnumerable<T> passes, Func<T, IEnumerable<Type>> getRunAfter, Func<T, IEnumerable<Type>> getRunBefore)
+        public static List<T> Sort<T>(IEnumerable<T> passes) where T : IPass
         {
             var passList = passes.ToList();
             if (passList.Count == 0) return passList;
 
             // Type -> インスタンスのマッピング
             var typeToInstance = passList.ToDictionary(p => p.GetType(), p => p);
+            
+            // 型名 -> Type のマッピング（文字列参照用）
+            var nameToType = BuildNameToTypeMapping(passList);
 
             // 依存関係グラフを構築
             var graph = new Dictionary<Type, HashSet<Type>>();
@@ -40,33 +43,41 @@ namespace TpLab.SceneFlow.Editor.Pass
             {
                 var passType = pass.GetType();
 
-                // RunAfter: この Pass は指定された Pass の「後」に実行される
-                // つまり、指定された Pass → この Pass という依存
-                foreach (var afterType in getRunAfter(pass))
+                // RunAfter (Type): この Pass は指定された Pass の「後」に実行される
+                foreach (var afterType in pass.RunAfter)
                 {
-                    if (graph.ContainsKey(afterType))
+                    AddDependency(graph, inDegree, afterType, passType, passType.Name, afterType.Name);
+                }
+
+                // RunBefore (Type): この Pass は指定された Pass の「前」に実行される
+                foreach (var beforeType in pass.RunBefore)
+                {
+                    AddDependency(graph, inDegree, passType, beforeType, passType.Name, beforeType.Name);
+                }
+
+                // RunAfterNames (string): 文字列ベースの依存関係
+                foreach (var afterName in pass.RunAfterNames)
+                {
+                    if (nameToType.TryGetValue(afterName, out var afterType))
                     {
-                        graph[afterType].Add(passType);
-                        inDegree[passType]++;
+                        AddDependency(graph, inDegree, afterType, passType, passType.Name, afterName);
                     }
                     else
                     {
-                        Logger.LogWarning($"Pass {passType.Name} depends on {afterType.Name} which is not found in the pass list");
+                        Logger.LogWarning($"Pass {passType.Name} depends on '{afterName}' which is not found in the pass list");
                     }
                 }
 
-                // RunBefore: この Pass は指定された Pass の「前」に実行される
-                // つまり、この Pass → 指定された Pass という依存
-                foreach (var beforeType in getRunBefore(pass))
+                // RunBeforeNames (string): 文字列ベースの依存関係
+                foreach (var beforeName in pass.RunBeforeNames)
                 {
-                    if (graph.ContainsKey(beforeType))
+                    if (nameToType.TryGetValue(beforeName, out var beforeType))
                     {
-                        graph[passType].Add(beforeType);
-                        inDegree[beforeType]++;
+                        AddDependency(graph, inDegree, passType, beforeType, passType.Name, beforeName);
                     }
                     else
                     {
-                        Logger.LogWarning($"Pass {passType.Name} should run before {beforeType.Name} which is not found in the pass list");
+                        Logger.LogWarning($"Pass {passType.Name} should run before '{beforeName}' which is not found in the pass list");
                     }
                 }
             }
@@ -107,6 +118,65 @@ namespace TpLab.SceneFlow.Editor.Pass
 
             // Type の順序に従ってインスタンスを並べ替え
             return result.Select(t => typeToInstance[t]).ToList();
+        }
+
+        /// <summary>
+        /// 型名から Type へのマッピングを構築
+        /// FullName と "FullName, AssemblyName" の両方に対応
+        /// </summary>
+        static Dictionary<string, Type> BuildNameToTypeMapping<T>(List<T> passes)
+        {
+            var mapping = new Dictionary<string, Type>(StringComparer.Ordinal);
+
+            foreach (var pass in passes)
+            {
+                var type = pass.GetType();
+                
+                // FullName で登録
+                if (type.FullName != null)
+                {
+                    mapping[type.FullName] = type;
+                }
+                
+                // AssemblyQualifiedName で登録
+                if (type.AssemblyQualifiedName != null)
+                {
+                    mapping[type.AssemblyQualifiedName] = type;
+                }
+                
+                // "FullName, AssemblyName" 形式でも登録
+                if (type.FullName != null && type.Assembly?.GetName()?.Name != null)
+                {
+                    var shortAssemblyName = $"{type.FullName}, {type.Assembly.GetName().Name}";
+                    mapping[shortAssemblyName] = type;
+                }
+            }
+
+            return mapping;
+        }
+
+        /// <summary>
+        /// グラフに依存関係を追加
+        /// </summary>
+        static void AddDependency(
+            Dictionary<Type, HashSet<Type>> graph,
+            Dictionary<Type, int> inDegree,
+            Type from,
+            Type to,
+            string fromName,
+            string toName)
+        {
+            if (graph.ContainsKey(from) && graph.ContainsKey(to))
+            {
+                if (graph[from].Add(to))
+                {
+                    inDegree[to]++;
+                }
+            }
+            else if (!graph.ContainsKey(from))
+            {
+                Logger.LogWarning($"Pass {fromName} depends on {toName} which is not found in the pass list");
+            }
         }
     }
 }

@@ -6,16 +6,16 @@ using UnityEngine;
 
 namespace TpLab.SceneFlow.Samples
 {
+    // ========================================
+    // 基本的な Pass の実装例
+    // ========================================
+
     /// <summary>
     /// BuildPass のサンプル実装
     /// ビルド全体で一度だけ実行される処理
     /// </summary>
     public class SampleBuildPass : IBuildPass
     {
-        // 依存関係がない場合は実装不要（デフォルト実装が使われる）
-        // public IEnumerable<Type> RunAfter => Array.Empty<Type>();
-        // public IEnumerable<Type> RunBefore => Array.Empty<Type>();
-
         public void Execute(SceneFlowContext context)
         {
             Debug.Log("[SampleBuildPass] ビルド前の環境検証を実行");
@@ -80,11 +80,8 @@ namespace TpLab.SceneFlow.Samples
     /// </summary>
     public class InjectReferencePass : IScenePass
     {
-        // CollectUdonBehaviourPass の後に実行
-        public IEnumerable<Type> RunAfter
-        {
-            get { yield return typeof(CollectUdonBehaviourPass); }
-        }
+        // CollectUdonBehaviourPass の後に実行（同じアセンブリ内）
+        public IEnumerable<Type> RunAfter { get; } = new[] { typeof(CollectUdonBehaviourPass) };
 
         public void Execute(SceneFlowContext context)
         {
@@ -100,15 +97,55 @@ namespace TpLab.SceneFlow.Samples
     public class ValidateReferencePass : IScenePass
     {
         // InjectReferencePass の後に実行
-        public IEnumerable<Type> RunAfter
-        {
-            get { yield return typeof(InjectReferencePass); }
-        }
+        public IEnumerable<Type> RunAfter { get; } = new[] { typeof(InjectReferencePass) };
 
         public void Execute(SceneFlowContext context)
         {
             Debug.Log($"[ValidateReferencePass] シーン '{context.Scene.name}' の参照を検証");
             // 参照が正しく設定されているか確認
+        }
+    }
+
+    // ========================================
+    // 他のアセンブリの Pass に依存する例
+    // ========================================
+
+    /// <summary>
+    /// 他のアセンブリの Pass に依存する例
+    /// アセンブリ循環参照を避けるため、文字列で指定します
+    /// </summary>
+    public class CrossAssemblyDependentPass : IScenePass
+    {
+        // 他のアセンブリの Pass を文字列で指定（アセンブリ循環参照を回避）
+        public IEnumerable<string> RunAfterNames { get; } = new[]
+        {
+            "OtherPackage.SomePass",
+            // アセンブリ名を含めた完全修飾名も可能
+            // "OtherPackage.SomePass, OtherPackage.Editor"
+        };
+
+        public void Execute(SceneFlowContext context)
+        {
+            Debug.Log($"[CrossAssemblyDependentPass] 他アセンブリの Pass の後に実行");
+        }
+    }
+
+    // ========================================
+    // 依存関係がない Pass の例
+    // ========================================
+
+    /// <summary>
+    /// 依存関係がない Pass の例
+    /// デフォルト実装により、プロパティの宣言は不要
+    /// </summary>
+    public class DirectInterfaceImplementationPass : IScenePass
+    {
+        // 依存関係がない場合は RunAfter/RunBefore を宣言する必要なし
+        // インターフェースのデフォルト実装（Array.Empty）が使用される
+
+        public void Execute(SceneFlowContext context)
+        {
+            Debug.Log($"[DirectInterfaceImplementationPass] 依存関係なしで実行");
         }
     }
 
@@ -119,15 +156,12 @@ namespace TpLab.SceneFlow.Samples
     public class OptimizeScenePass : IScenePass
     {
         // すべての Pass の後に実行
-        public IEnumerable<Type> RunAfter
+        public IEnumerable<Type> RunAfter { get; } = new[]
         {
-            get
-            {
-                yield return typeof(CollectUdonBehaviourPass);
-                yield return typeof(InjectReferencePass);
-                yield return typeof(ValidateReferencePass);
-            }
-        }
+            typeof(CollectUdonBehaviourPass),
+            typeof(InjectReferencePass),
+            typeof(ValidateReferencePass)
+        };
 
         public void Execute(SceneFlowContext context)
         {
@@ -136,5 +170,5 @@ namespace TpLab.SceneFlow.Samples
         }
     }
 }
-}
+
 
