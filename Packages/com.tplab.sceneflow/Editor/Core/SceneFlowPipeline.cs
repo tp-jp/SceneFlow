@@ -12,7 +12,7 @@ namespace TpLab.SceneFlow.Editor.Core
     /// 
     /// ■ 実行順序
     /// - すべての IPass を検出
-    /// - RunAfter/RunBefore の依存関係に基づいてソート
+    /// - Dependencies の依存関係に基づいてソート
     /// - ソート済みの順序で実行
     /// </summary>
     public static class SceneFlowPipeline

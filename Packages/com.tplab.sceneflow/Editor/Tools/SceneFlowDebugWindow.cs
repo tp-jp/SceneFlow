@@ -89,7 +89,7 @@ namespace TpLab.SceneFlow.Editor.Tools
             {
                 ExpandAll(false);
             }
-            if (GUILayout.Button("⟳", GUILayout.Width(30)))
+            if (GUILayout.Button("↻", GUILayout.Width(30)))
             {
                 _needsRefresh = true;
             }
@@ -108,7 +108,9 @@ namespace TpLab.SceneFlow.Editor.Tools
             try
             {
                 // 依存関係でソート（全Passを対象にする）
-                var sorted = PassSorter.Sort(passes);
+                // フィルタリング時は警告を抑制（一部のPassが除外されるため）
+                var suppressWarnings = !string.IsNullOrEmpty(_searchFilter);
+                var sorted = PassSorter.Sort(passes, suppressWarnings);
                 
                 // ソート後に検索フィルター適用
                 var filteredPasses = sorted;
@@ -175,8 +177,7 @@ namespace TpLab.SceneFlow.Editor.Tools
             _passFoldouts.TryAdd(passKey, false);
             
             // 依存関係の有無を判定
-            var hasDetails = pass.RunAfter.Any() || pass.RunBefore.Any() || 
-                           pass.RunAfterNames.Any() || pass.RunBeforeNames.Any();
+            var hasDetails = pass.Dependencies.Any();
             
             // 背景色（交互）
             var bgColor = index % 2 == 0 
@@ -247,24 +248,27 @@ namespace TpLab.SceneFlow.Editor.Tools
                     
                     using (new EditorGUILayout.VerticalScope())
                     {
-                        // After 依存関係
-                        var runAfterTypes = pass.RunAfter.ToList();
-                        var runAfterNames = pass.RunAfterNames.ToList();
-                        
-                        if (runAfterTypes.Any() || runAfterNames.Any())
+                        // 新API: Dependencies
+                        var dependencies = pass.Dependencies.ToList();
+                        if (dependencies.Any())
                         {
-                            var allAfter = runAfterTypes.Select(t => t.Name).Concat(runAfterNames);
-                            EditorGUILayout.LabelField($"After: {string.Join(", ", allAfter)}", EditorStyles.miniLabel);
-                        }
-                        
-                        // Before 依存関係
-                        var runBeforeTypes = pass.RunBefore.ToList();
-                        var runBeforeNames = pass.RunBeforeNames.ToList();
-                        
-                        if (runBeforeTypes.Any() || runBeforeNames.Any())
-                        {
-                            var allBefore = runBeforeTypes.Select(t => t.Name).Concat(runBeforeNames);
-                            EditorGUILayout.LabelField($"Before: {string.Join(", ", allBefore)}", EditorStyles.miniLabel);
+                            var afterDeps = dependencies
+                                .Where(d => d.Relation == PassDependency.Direction.After)
+                                .Select(d => d.IsTypeReference ? d.TargetType.Name : d.TargetTypeName)
+                                .ToList();
+                            var beforeDeps = dependencies
+                                .Where(d => d.Relation == PassDependency.Direction.Before)
+                                .Select(d => d.IsTypeReference ? d.TargetType.Name : d.TargetTypeName)
+                                .ToList();
+                            
+                            if (afterDeps.Any())
+                            {
+                                EditorGUILayout.LabelField($"After: {string.Join(", ", afterDeps)}", EditorStyles.miniLabel);
+                            }
+                            if (beforeDeps.Any())
+                            {
+                                EditorGUILayout.LabelField($"Before: {string.Join(", ", beforeDeps)}", EditorStyles.miniLabel);
+                            }
                         }
                     }
                 }
@@ -277,13 +281,15 @@ namespace TpLab.SceneFlow.Editor.Tools
         {
             var parts = new List<string>();
             
-            var afterCount = pass.RunAfter.Count() + pass.RunAfterNames.Count();
-            var beforeCount = pass.RunBefore.Count() + pass.RunBeforeNames.Count();
+            var dependencies = pass.Dependencies.ToList();
+            var afterCount = dependencies.Count(d => d.Relation == PassDependency.Direction.After);
+            var beforeCount = dependencies.Count(d => d.Relation == PassDependency.Direction.Before);
             
             if (afterCount > 0)
             {
-                var afterNames = pass.RunAfter.Select(t => t.Name)
-                    .Concat(pass.RunAfterNames)
+                var afterNames = dependencies
+                    .Where(d => d.Relation == PassDependency.Direction.After)
+                    .Select(d => d.IsTypeReference ? d.TargetType.Name : d.TargetTypeName)
                     .Take(2);
                 var afterText = string.Join(", ", afterNames);
                 if (afterCount > 2) afterText += $"... (+{afterCount - 2})";
@@ -292,8 +298,9 @@ namespace TpLab.SceneFlow.Editor.Tools
             
             if (beforeCount > 0)
             {
-                var beforeNames = pass.RunBefore.Select(t => t.Name)
-                    .Concat(pass.RunBeforeNames)
+                var beforeNames = dependencies
+                    .Where(d => d.Relation == PassDependency.Direction.Before)
+                    .Select(d => d.IsTypeReference ? d.TargetType.Name : d.TargetTypeName)
                     .Take(2);
                 var beforeText = string.Join(", ", beforeNames);
                 if (beforeCount > 2) beforeText += $"... (+{beforeCount - 2})";

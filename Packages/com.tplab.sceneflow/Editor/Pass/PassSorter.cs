@@ -13,7 +13,9 @@ namespace TpLab.SceneFlow.Editor.Pass
         /// <summary>
         /// Pass インスタンスのリストを依存関係に基づいてソートする
         /// </summary>
-        public static List<T> Sort<T>(IEnumerable<T> passes) where T : IPass
+        /// <param name="passes">ソート対象の Pass リスト</param>
+        /// <param name="suppressWarnings">警告を抑制するか（デバッグウィンドウのフィルタリング時など）</param>
+        public static List<T> Sort<T>(IEnumerable<T> passes, bool suppressWarnings = false) where T : IPass
         {
             var passList = passes.ToList();
             if (passList.Count == 0) return passList;
@@ -38,46 +40,44 @@ namespace TpLab.SceneFlow.Editor.Pass
                 }
             }
 
-            // RunAfter と RunBefore から依存関係を構築
+            // Dependencies から依存関係を構築
             foreach (var pass in passList)
             {
                 var passType = pass.GetType();
 
-                // RunAfter (Type): この Pass は指定された Pass の「後」に実行される
-                foreach (var afterType in pass.RunAfter)
+                foreach (var dependency in pass.Dependencies)
                 {
-                    AddDependency(graph, inDegree, afterType, passType, passType.Name, afterType.Name);
-                }
-
-                // RunBefore (Type): この Pass は指定された Pass の「前」に実行される
-                foreach (var beforeType in pass.RunBefore)
-                {
-                    AddDependency(graph, inDegree, passType, beforeType, passType.Name, beforeType.Name);
-                }
-
-                // RunAfterNames (string): 文字列ベースの依存関係
-                foreach (var afterName in pass.RunAfterNames)
-                {
-                    if (nameToType.TryGetValue(afterName, out var afterType))
+                    if (dependency.IsTypeReference)
                     {
-                        AddDependency(graph, inDegree, afterType, passType, passType.Name, afterName);
+                        var targetType = dependency.TargetType;
+                        if (dependency.Relation == PassDependency.Direction.After)
+                        {
+                            AddDependency(graph, inDegree, targetType, passType, passType.Name, targetType.Name, suppressWarnings);
+                        }
+                        else // Before
+                        {
+                            AddDependency(graph, inDegree, passType, targetType, passType.Name, targetType.Name, suppressWarnings);
+                        }
                     }
-                    else
+                    else if (dependency.IsNameReference)
                     {
-                        Logger.LogWarning($"Pass {passType.Name} depends on '{afterName}' which is not found in the pass list");
-                    }
-                }
-
-                // RunBeforeNames (string): 文字列ベースの依存関係
-                foreach (var beforeName in pass.RunBeforeNames)
-                {
-                    if (nameToType.TryGetValue(beforeName, out var beforeType))
-                    {
-                        AddDependency(graph, inDegree, passType, beforeType, passType.Name, beforeName);
-                    }
-                    else
-                    {
-                        Logger.LogWarning($"Pass {passType.Name} should run before '{beforeName}' which is not found in the pass list");
+                        var targetName = dependency.TargetTypeName;
+                        if (nameToType.TryGetValue(targetName, out var targetType))
+                        {
+                            if (dependency.Relation == PassDependency.Direction.After)
+                            {
+                                AddDependency(graph, inDegree, targetType, passType, passType.Name, targetName, suppressWarnings);
+                            }
+                            else // Before
+                            {
+                                AddDependency(graph, inDegree, passType, targetType, passType.Name, targetName, suppressWarnings);
+                            }
+                        }
+                        else if (!suppressWarnings)
+                        {
+                            var relation = dependency.Relation == PassDependency.Direction.After ? "depends on" : "should run before";
+                            Logger.LogWarning($"Pass '{passType.Name}' {relation} '{targetName}' which is not found in the current pass list");
+                        }
                     }
                 }
             }
@@ -145,10 +145,14 @@ namespace TpLab.SceneFlow.Editor.Pass
                 }
                 
                 // "FullName, AssemblyName" 形式でも登録
-                if (type.FullName != null && type.Assembly?.GetName()?.Name != null)
+                if (type.FullName != null && type.Assembly != null)
                 {
-                    var shortAssemblyName = $"{type.FullName}, {type.Assembly.GetName().Name}";
-                    mapping[shortAssemblyName] = type;
+                    var assemblyName = type.Assembly.GetName()?.Name;
+                    if (assemblyName != null)
+                    {
+                        var shortAssemblyName = $"{type.FullName}, {assemblyName}";
+                        mapping[shortAssemblyName] = type;
+                    }
                 }
             }
 
@@ -164,8 +168,10 @@ namespace TpLab.SceneFlow.Editor.Pass
             Type from,
             Type to,
             string fromName,
-            string toName)
+            string toName,
+            bool suppressWarnings)
         {
+            // 両方の型がグラフに存在する場合のみ依存関係を追加
             if (graph.ContainsKey(from) && graph.ContainsKey(to))
             {
                 if (graph[from].Add(to))
@@ -173,9 +179,16 @@ namespace TpLab.SceneFlow.Editor.Pass
                     inDegree[to]++;
                 }
             }
-            else if (!graph.ContainsKey(from))
+            // from が存在しない場合は警告（ただし suppressWarnings が false の場合のみ）
+            // これは文字列参照で発生する可能性がある
+            else if (!graph.ContainsKey(from) && !suppressWarnings)
             {
-                Logger.LogWarning($"Pass {fromName} depends on {toName} which is not found in the pass list");
+                Logger.LogWarning($"Pass '{fromName}' depends on '{toName}' which is not found in the current pass list");
+            }
+            // to が存在しない場合も同様（ただし、これは Type 参照では通常発生しない）
+            else if (!graph.ContainsKey(to) && !suppressWarnings)
+            {
+                Logger.LogWarning($"Pass '{fromName}' has a dependency on '{toName}' which is not found in the current pass list");
             }
         }
     }

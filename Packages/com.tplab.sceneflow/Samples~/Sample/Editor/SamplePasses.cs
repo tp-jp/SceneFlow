@@ -80,8 +80,11 @@ namespace TpLab.SceneFlow.Samples
     /// </summary>
     public class InjectReferencePass : IPass
     {
-        // CollectUdonBehaviourPass の後に実行（同じアセンブリ内）
-        public IEnumerable<Type> RunAfter { get; } = new[] { typeof(CollectUdonBehaviourPass) };
+        // DependencyBuilder を使用した依存関係の宣言（推奨）
+        public IEnumerable<PassDependency> Dependencies => DependencyBuilder
+            .Create()
+            .After<CollectUdonBehaviourPass>()
+            .Build();
 
         public void Execute(SceneFlowContext context)
         {
@@ -96,8 +99,11 @@ namespace TpLab.SceneFlow.Samples
     /// </summary>
     public class ValidateReferencePass : IPass
     {
-        // InjectReferencePass の後に実行
-        public IEnumerable<Type> RunAfter { get; } = new[] { typeof(InjectReferencePass) };
+        // DependencyBuilder を使用した依存関係の宣言（推奨）
+        public IEnumerable<PassDependency> Dependencies => DependencyBuilder
+            .Create()
+            .After<InjectReferencePass>()
+            .Build();
 
         public void Execute(SceneFlowContext context)
         {
@@ -111,31 +117,38 @@ namespace TpLab.SceneFlow.Samples
     // ========================================
 
     /// <summary>
-    /// 他のアセンブリの Pass に依存する例
-    /// アセンブリ循環参照を避けるため、文字列で指定します
+    /// 他のアセンブリの Pass に依存する場合の例
+    /// アセンブリ循環参照を避けるため、文字列で完全修飾名を指定します
     /// 
-    /// 注意: この例では実際に存在しない Pass を参照しているため、
-    /// 実際の使用時は存在する Pass の完全修飾名を指定してください
+    /// ■ 文字列参照が必要なケース
+    /// - Assembly A の Pass が Assembly B の Pass に依存
+    /// - Assembly B の Pass が Assembly A の Pass に依存
+    /// このような循環参照を避けるため、どちらか一方を文字列で参照します
+    /// 
+    /// ■ 使用例（DependencyBuilder 推奨）
+    /// <code>
+    /// public IEnumerable&lt;PassDependency&gt; Dependencies => DependencyBuilder
+    ///     .Create()
+    ///     .After("OtherNamespace.SomePass, OtherAssembly.Editor")
+    ///     .Before("YetAnotherNamespace.AnotherPass, ThirdPartyPackage.Editor")
+    ///     .Build();
+    /// </code>
     /// </summary>
     public class CrossAssemblyDependentPassExample : IPass
     {
-        // 他のアセンブリの Pass を文字列で指定する場合の例：
-        // public IEnumerable<string> RunAfterNames { get; } = new[]
-        // {
-        //     "OtherNamespace.SomePass",
-        //     // アセンブリ名を含めた完全修飾名も可能
-        //     "OtherNamespace.AnotherPass, OtherAssembly.Editor"
-        // };
-
-        // このサンプルでは同一アセンブリ内の Pass を文字列で参照（動作確認用）
-        public IEnumerable<string> RunAfterNames { get; } = new[]
-        {
-            "TpLab.SceneFlow.Samples.CollectUdonBehaviourPass"
-        };
+        // DependencyBuilder を使用（文字列参照）
+        public IEnumerable<PassDependency> Dependencies => DependencyBuilder
+            .Create()
+            // このサンプルでは同一アセンブリ内の Pass を文字列で参照（動作確認用）
+            .After("TpLab.SceneFlow.Samples.CollectUdonBehaviourPass")
+            // 他のアセンブリの Pass を参照する場合の例：
+            // .After("OtherNamespace.SomePass, OtherAssembly.Editor")
+            // .Before("YetAnotherNamespace.AnotherPass, ThirdPartyPackage.Editor")
+            .Build();
 
         public void Execute(SceneFlowContext context)
         {
-            Debug.Log($"[CrossAssemblyDependentPassExample] 文字列参照による依存関係の例");
+            Debug.Log("[CrossAssemblyDependentPassExample] 文字列参照による依存関係の例");
         }
     }
 
@@ -145,11 +158,11 @@ namespace TpLab.SceneFlow.Samples
 
     /// <summary>
     /// 依存関係がない Pass の例
-    /// デフォルト実装により、プロパティの宣言は不要
+    /// Dependencies プロパティを宣言する必要はありません（デフォルト実装が使用される）
     /// </summary>
     public class DirectInterfaceImplementationPass : IPass
     {
-        // 依存関係がない場合は RunAfter/RunBefore を宣言する必要なし
+        // 依存関係がない場合は Dependencies を宣言する必要なし
         // インターフェースのデフォルト実装（Array.Empty）が使用される
 
         public void Execute(SceneFlowContext context)
@@ -164,13 +177,13 @@ namespace TpLab.SceneFlow.Samples
     /// </summary>
     public class OptimizeScenePass : IPass
     {
-        // すべての Pass の後に実行
-        public IEnumerable<Type> RunAfter { get; } = new[]
-        {
-            typeof(CollectUdonBehaviourPass),
-            typeof(InjectReferencePass),
-            typeof(ValidateReferencePass)
-        };
+        // DependencyBuilder を使用（複数の依存関係を宣言）
+        public IEnumerable<PassDependency> Dependencies => DependencyBuilder
+            .Create()
+            .After<CollectUdonBehaviourPass>()
+            .After<InjectReferencePass>()
+            .After<ValidateReferencePass>()
+            .Build();
 
         public void Execute(SceneFlowContext context)
         {
@@ -178,6 +191,31 @@ namespace TpLab.SceneFlow.Samples
             // 開発用コンポーネントの削除など
         }
     }
+
+    // ========================================
+    // Before の使用例
+    // ========================================
+
+    /// <summary>
+    /// 準備処理を行う Pass
+    /// 「Before」を使って他の Pass より前に実行されることを宣言
+    /// </summary>
+    public class PreparationPass : IPass
+    {
+        // DependencyBuilder を使用（Before の例）
+        // CollectUdonBehaviourPass の「前」に実行されることを宣言
+        public IEnumerable<PassDependency> Dependencies => DependencyBuilder
+            .Create()
+            .Before<CollectUdonBehaviourPass>()
+            .Build();
+
+        public void Execute(SceneFlowContext context)
+        {
+            Debug.Log($"[PreparationPass] シーン '{context.Scene.name}' の準備処理");
+            // UdonBehaviour の収集前に必要な準備を行う
+        }
+    }
 }
+
 
 

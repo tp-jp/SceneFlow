@@ -9,8 +9,18 @@ namespace TpLab.SceneFlow.Editor.Pass
     /// ビルド時に実行される処理の最小単位
     /// 
     /// ■ 実行順序の制御
-    /// - RunAfter/RunBefore で依存関係を宣言
+    /// - Dependencies で依存関係を宣言
     /// - PassSorter が自動的にトポロジカルソート
+    /// 
+    /// ■ 依存関係の宣言方法
+    /// <code>
+    /// public IEnumerable&lt;PassDependency&gt; Dependencies => DependencyBuilder
+    ///     .Create()
+    ///     .After&lt;SomePass&gt;()  // Type参照（同一アセンブリ推奨）
+    ///     .After("Other.Pass, OtherAssembly")  // 文字列参照（他アセンブリ）
+    ///     .Before&lt;AnotherPass&gt;()  // この Pass は AnotherPass の前に実行
+    ///     .Build();
+    /// </code>
     /// 
     /// ■ 用途例
     /// - ビルド環境の検証
@@ -21,28 +31,20 @@ namespace TpLab.SceneFlow.Editor.Pass
     public interface IPass
     {
         /// <summary>
-        /// この Pass より「後」に実行されるべき Pass 型（同一アセンブリ内推奨）
+        /// Pass の依存関係
+        /// 
+        /// ■ 使用方法（推奨：DependencyBuilder）
+        /// <code>
+        /// public IEnumerable&lt;PassDependency&gt; Dependencies => DependencyBuilder
+        ///     .Create()
+        ///     .After&lt;FirstPass&gt;()
+        ///     .After&lt;SecondPass&gt;()
+        ///     .Before&lt;FinalPass&gt;()
+        ///     .After("OtherPackage.Pass, OtherAssembly")  // 他アセンブリ参照
+        ///     .Build();
+        /// </code>
         /// </summary>
-        IEnumerable<Type> RunAfter => Array.Empty<Type>();
-
-        /// <summary>
-        /// この Pass より「前」に実行されるべき Pass 型（同一アセンブリ内推奨）
-        /// </summary>
-        IEnumerable<Type> RunBefore => Array.Empty<Type>();
-
-        /// <summary>
-        /// この Pass より「後」に実行されるべき Pass の型名（他アセンブリ参照時に使用）
-        /// 形式: "Namespace.ClassName" または "Namespace.ClassName, AssemblyName"
-        /// アセンブリ循環参照を避けるため、他アセンブリの Pass を参照する場合はこちらを使用してください
-        /// </summary>
-        IEnumerable<string> RunAfterNames => Array.Empty<string>();
-
-        /// <summary>
-        /// この Pass より「前」に実行されるべき Pass の型名（他アセンブリ参照時に使用）
-        /// 形式: "Namespace.ClassName" または "Namespace.ClassName, AssemblyName"
-        /// アセンブリ循環参照を避けるため、他アセンブリの Pass を参照する場合はこちらを使用してください
-        /// </summary>
-        IEnumerable<string> RunBeforeNames => Array.Empty<string>();
+        IEnumerable<PassDependency> Dependencies => Array.Empty<PassDependency>();
 
         /// <summary>
         /// Pass 処理を実行する
