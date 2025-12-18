@@ -11,14 +11,14 @@ namespace TpLab.SceneFlow.Samples
     // ========================================
 
     /// <summary>
-    /// BuildPass のサンプル実装
-    /// ビルド全体で一度だけ実行される処理
+    /// 環境検証を行う Pass
+    /// ビルド前に環境をチェックする用途
     /// </summary>
-    public class SampleBuildPass : IBuildPass
+    public class EnvironmentValidationPass : IPass
     {
         public void Execute(SceneFlowContext context)
         {
-            Debug.Log("[SampleBuildPass] ビルド前の環境検証を実行");
+            Debug.Log("[EnvironmentValidationPass] ビルド環境を検証");
             // 例: 
             // - Unity バージョンチェック
             // - 必須パッケージの存在確認
@@ -27,14 +27,14 @@ namespace TpLab.SceneFlow.Samples
     }
 
     /// <summary>
-    /// ProjectPass のサンプル実装
+    /// アセット生成を行う Pass
     /// プロジェクト全体に対する処理
     /// </summary>
-    public class SampleProjectPass : IProjectPass
+    public class AssetGenerationPass : IPass
     {
         public void Execute(SceneFlowContext context)
         {
-            Debug.Log("[SampleProjectPass] プロジェクト全体の処理を実行");
+            Debug.Log("[AssetGenerationPass] アセットを生成");
             // 例:
             // - ScriptableObject の生成
             // - 共通アセットの更新
@@ -43,14 +43,14 @@ namespace TpLab.SceneFlow.Samples
     }
 
     /// <summary>
-    /// ScenePass のサンプル実装
-    /// シーン単位の処理
+    /// シーン処理を行う Pass
+    /// シーン内のオブジェクトを処理
     /// </summary>
-    public class SampleScenePass : IScenePass
+    public class SceneObjectProcessPass : IPass
     {
         public void Execute(SceneFlowContext context)
         {
-            Debug.Log($"[SampleScenePass] シーン '{context.Scene.name}' の処理を実行");
+            Debug.Log($"[SceneObjectProcessPass] シーン '{context.Scene.name}' のオブジェクトを処理");
             // 例:
             // - シーン内のオブジェクト検証
             // - コンポーネントの自動設定
@@ -65,7 +65,7 @@ namespace TpLab.SceneFlow.Samples
     /// <summary>
     /// UdonBehaviour を収集する Pass
     /// </summary>
-    public class CollectUdonBehaviourPass : IScenePass
+    public class CollectUdonBehaviourPass : IPass
     {
         public void Execute(SceneFlowContext context)
         {
@@ -78,7 +78,7 @@ namespace TpLab.SceneFlow.Samples
     /// 参照を注入する Pass
     /// CollectUdonBehaviourPass の後に実行される必要がある
     /// </summary>
-    public class InjectReferencePass : IScenePass
+    public class InjectReferencePass : IPass
     {
         // CollectUdonBehaviourPass の後に実行（同じアセンブリ内）
         public IEnumerable<Type> RunAfter { get; } = new[] { typeof(CollectUdonBehaviourPass) };
@@ -94,7 +94,7 @@ namespace TpLab.SceneFlow.Samples
     /// 検証を行う Pass
     /// InjectReferencePass の後に実行される必要がある
     /// </summary>
-    public class ValidateReferencePass : IScenePass
+    public class ValidateReferencePass : IPass
     {
         // InjectReferencePass の後に実行
         public IEnumerable<Type> RunAfter { get; } = new[] { typeof(InjectReferencePass) };
@@ -114,7 +114,7 @@ namespace TpLab.SceneFlow.Samples
     /// 他のアセンブリの Pass に依存する例
     /// アセンブリ循環参照を避けるため、文字列で指定します
     /// </summary>
-    public class CrossAssemblyDependentPass : IScenePass
+    public class CrossAssemblyDependentPass : IPass
     {
         // 他のアセンブリの Pass を文字列で指定（アセンブリ循環参照を回避）
         public IEnumerable<string> RunAfterNames { get; } = new[]
@@ -138,7 +138,7 @@ namespace TpLab.SceneFlow.Samples
     /// 依存関係がない Pass の例
     /// デフォルト実装により、プロパティの宣言は不要
     /// </summary>
-    public class DirectInterfaceImplementationPass : IScenePass
+    public class DirectInterfaceImplementationPass : IPass
     {
         // 依存関係がない場合は RunAfter/RunBefore を宣言する必要なし
         // インターフェースのデフォルト実装（Array.Empty）が使用される
@@ -153,7 +153,7 @@ namespace TpLab.SceneFlow.Samples
     /// 最適化を行う Pass
     /// 他のすべての処理の後に実行される
     /// </summary>
-    public class OptimizeScenePass : IScenePass
+    public class OptimizeScenePass : IPass
     {
         // すべての Pass の後に実行
         public IEnumerable<Type> RunAfter { get; } = new[]

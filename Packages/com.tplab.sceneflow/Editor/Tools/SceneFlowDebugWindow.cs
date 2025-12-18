@@ -26,18 +26,8 @@ namespace TpLab.SceneFlow.Editor.Tools
 
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
-            // BuildPass
-            DrawPassSection("Build Passes", PassDiscovery.DiscoverBuildPasses().ToList());
-
-            EditorGUILayout.Space();
-
-            // ProjectPass
-            DrawPassSection("Project Passes", PassDiscovery.DiscoverProjectPasses().ToList());
-
-            EditorGUILayout.Space();
-
-            // ScenePass
-            DrawPassSection("Scene Passes", PassDiscovery.DiscoverScenePasses().ToList());
+            // すべての Pass を表示
+            DrawPassSection("All Passes", PassDiscovery.DiscoverPasses<IPass>().ToList());
 
             EditorGUILayout.EndScrollView();
         }
@@ -100,4 +90,5 @@ namespace TpLab.SceneFlow.Editor.Tools
         }
     }
 }
+
 

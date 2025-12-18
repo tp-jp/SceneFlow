@@ -27,13 +27,12 @@ SceneFlow は Unity のビルド前処理を Pass 単位で整理し、依存関
 using TpLab.SceneFlow.Editor.Core;
 using TpLab.SceneFlow.Editor.Pass;
 
-public class MyScenePass : IScenePass
+public class MyPass : IPass
 {
     public void Execute(SceneFlowContext context)
     {
-        // シーン処理を実装
+        // ビルド時処理を実装
         // context.Scene でシーンにアクセス
-        // context.BuildReport でビルドレポートにアクセス
     }
 }
 ```
@@ -41,7 +40,7 @@ public class MyScenePass : IScenePass
 ### 依存関係の宣言
 
 ```csharp
-public class InjectReferencePass : IScenePass
+public class InjectReferencePass : IPass
 {
     // この Pass は CollectDataPass の「後」に実行される
     public IEnumerable<Type> RunAfter { get; } = new[] { typeof(CollectDataPass) };
@@ -59,7 +58,7 @@ public class InjectReferencePass : IScenePass
 ### 複数の依存関係
 
 ```csharp
-public class ValidatePass : IScenePass
+public class ValidatePass : IPass
 {
     // 複数の Pass の後に実行
     public IEnumerable<Type> RunAfter { get; } = new[]
@@ -80,3 +79,5 @@ public class ValidatePass : IScenePass
 詳細は [Pass 実装ガイド](./Packages/com.tplab.sceneflow/Documentation~/PassImplementationGuide.md) を参照してください。
 
 ---
+
+

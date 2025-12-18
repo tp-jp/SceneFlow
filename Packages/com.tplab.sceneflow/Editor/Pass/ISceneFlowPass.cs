@@ -5,8 +5,18 @@ using TpLab.SceneFlow.Editor.Core;
 namespace TpLab.SceneFlow.Editor.Pass
 {
     /// <summary>
-    /// Pass の基本インターフェース
-    /// すべての Pass が実装する共通機能を定義
+    /// SceneFlow Pass インターフェース
+    /// ビルド時に実行される処理の最小単位
+    /// 
+    /// ■ 実行順序の制御
+    /// - RunAfter/RunBefore で依存関係を宣言
+    /// - PassSorter が自動的にトポロジカルソート
+    /// 
+    /// ■ 用途例
+    /// - ビルド環境の検証
+    /// - アセットの生成・更新
+    /// - シーン内オブジェクトの処理
+    /// - 参照の自動設定
     /// </summary>
     public interface IPass
     {
@@ -39,32 +49,6 @@ namespace TpLab.SceneFlow.Editor.Pass
         /// </summary>
         /// <param name="context">SceneFlow 実行コンテキスト</param>
         void Execute(SceneFlowContext context);
-    }
-
-    /// <summary>
-    /// ビルドパス基底インターフェース
-    /// ビルド全体で一度だけ実行される処理
-    /// 例: 環境検証、設定ファイル生成、事前準備、後処理
-    /// </summary>
-    public interface IBuildPass : IPass
-    {
-    }
-
-    /// <summary>
-    /// プロジェクトパス基底インターフェース
-    /// プロジェクト全体に対する処理
-    /// 例: ScriptableObject 生成、共通アセットの更新、キャッシュ構築
-    /// </summary>
-    public interface IProjectPass : IPass
-    {
-    }
-
-    /// <summary>
-    /// シーンパス基底インターフェース
-    /// シーン単位の処理
-    /// </summary>
-    public interface IScenePass : IPass
-    {
     }
 }
 

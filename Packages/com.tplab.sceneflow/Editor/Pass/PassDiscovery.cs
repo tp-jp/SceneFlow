@@ -11,31 +11,7 @@ namespace TpLab.SceneFlow.Editor.Pass
     public static class PassDiscovery
     {
         /// <summary>
-        /// IBuildPass を実装した Pass をすべて検出する
-        /// </summary>
-        public static IEnumerable<IBuildPass> DiscoverBuildPasses()
-        {
-            return DiscoverPasses<IBuildPass>();
-        }
-
-        /// <summary>
-        /// IProjectPass を実装した Pass をすべて検出する
-        /// </summary>
-        public static IEnumerable<IProjectPass> DiscoverProjectPasses()
-        {
-            return DiscoverPasses<IProjectPass>();
-        }
-
-        /// <summary>
-        /// IScenePass を実装した Pass をすべて検出する
-        /// </summary>
-        public static IEnumerable<IScenePass> DiscoverScenePasses()
-        {
-            return DiscoverPasses<IScenePass>();
-        }
-
-        /// <summary>
-        /// IPass を実装した Pass をすべて検出する（汎用メソッド）
+        /// IPass を実装した Pass をすべて検出する
         /// </summary>
         public static IEnumerable<T> DiscoverPasses<T>() where T : IPass
         {

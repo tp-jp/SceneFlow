@@ -21,28 +21,13 @@ namespace TpLab.SceneFlow.Editor.Bootstrap
 
         static void ValidatePasses()
         {
-            var buildPasses = PassDiscovery.DiscoverBuildPasses().ToList();
-            var projectPasses = PassDiscovery.DiscoverProjectPasses().ToList();
-            var scenePasses = PassDiscovery.DiscoverScenePasses().ToList();
+            var passes = PassDiscovery.DiscoverPasses<IPass>().ToList();
             
-            var total = buildPasses.Count + projectPasses.Count + scenePasses.Count;
+            Logger.Log($"Total {passes.Count} pass(es) discovered:");
             
-            Logger.Log($"Total {total} pass(es) discovered:");
-            Logger.Log($"  - BuildPass: {buildPasses.Count}");
-            Logger.Log($"  - ProjectPass: {projectPasses.Count}");
-            Logger.Log($"  - ScenePass: {scenePasses.Count}");
-            
-            foreach (var pass in buildPasses)
+            foreach (var pass in passes)
             {
-                Logger.LogDebug($"  [Build] {pass.GetType().Name}");
-            }
-            foreach (var pass in projectPasses)
-            {
-                Logger.LogDebug($"  [Project] {pass.GetType().Name}");
-            }
-            foreach (var pass in scenePasses)
-            {
-                Logger.LogDebug($"  [Scene] {pass.GetType().Name}");
+                Logger.LogDebug($"  - {pass.GetType().Name}");
             }
         }
     }
