@@ -113,20 +113,29 @@ namespace TpLab.SceneFlow.Samples
     /// <summary>
     /// 他のアセンブリの Pass に依存する例
     /// アセンブリ循環参照を避けるため、文字列で指定します
+    /// 
+    /// 注意: この例では実際に存在しない Pass を参照しているため、
+    /// 実際の使用時は存在する Pass の完全修飾名を指定してください
     /// </summary>
-    public class CrossAssemblyDependentPass : IPass
+    public class CrossAssemblyDependentPassExample : IPass
     {
-        // 他のアセンブリの Pass を文字列で指定（アセンブリ循環参照を回避）
+        // 他のアセンブリの Pass を文字列で指定する場合の例：
+        // public IEnumerable<string> RunAfterNames { get; } = new[]
+        // {
+        //     "OtherNamespace.SomePass",
+        //     // アセンブリ名を含めた完全修飾名も可能
+        //     "OtherNamespace.AnotherPass, OtherAssembly.Editor"
+        // };
+
+        // このサンプルでは同一アセンブリ内の Pass を文字列で参照（動作確認用）
         public IEnumerable<string> RunAfterNames { get; } = new[]
         {
-            "OtherPackage.SomePass",
-            // アセンブリ名を含めた完全修飾名も可能
-            // "OtherPackage.SomePass, OtherPackage.Editor"
+            "TpLab.SceneFlow.Samples.CollectUdonBehaviourPass"
         };
 
         public void Execute(SceneFlowContext context)
         {
-            Debug.Log($"[CrossAssemblyDependentPass] 他アセンブリの Pass の後に実行");
+            Debug.Log($"[CrossAssemblyDependentPassExample] 文字列参照による依存関係の例");
         }
     }
 
