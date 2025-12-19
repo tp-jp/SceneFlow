@@ -2,8 +2,6 @@
 
 Unity の「ビルド時処理」を構造化・順序保証するための最小パイプラインフレームワーク
 
-**SceneFlow = Build-time orchestration**
-
 ---
 
 ## 概要
