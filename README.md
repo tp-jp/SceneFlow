@@ -12,7 +12,7 @@ SceneFlow は Unity のビルド前処理を Pass 単位で整理し、依存関
 
 ### 解決したい問題
 
-Unity（特に VRChat + Udon）では以下が頻発します：
+Unityでは以下が頻発します：
 
 - ビルド前に「必ずやりたい処理」が多数ある
 - 処理同士に **暗黙の依存順** がある
@@ -43,15 +43,10 @@ SceneFlow における唯一の拡張単位。
 
 **依存関係ベース**で順序を制御：
 
-推奨される API:
-- `DependencyBuilder.Create().After<T>()`: 指定 Pass の**後**に実行（Type参照）
-- `DependencyBuilder.Create().Before<T>()`: 指定 Pass の**前**に実行（Type参照）
-- `DependencyBuilder.Create().After(string)`: 文字列で指定（他アセンブリ参照時）
-- `DependencyBuilder.Create().Before(string)`: 文字列で指定（他アセンブリ参照時）
-
-従来の方法も使用可能:
-- `PassDependency.After<T>()` / `PassDependency.Before<T>()`
-- `PassDependency.After(string)` / `PassDependency.Before(string)`
+- `builder.After<T>()`: 指定 Pass の**後**に実行（Type参照）
+- `builder.Before<T>()`: 指定 Pass の**前**に実行（Type参照）
+- `builder.After(string)`: 文字列で指定（他アセンブリ参照時）
+- `builder.Before(string)`: 文字列で指定（他アセンブリ参照時）
 
 `PassSorter` が依存関係に基づいてトポロジカルソートを実行します。
 
@@ -68,7 +63,7 @@ using UnityEngine;
 
 public class MyPass : IPass
 {
-    public void Execute(SceneFlowContext context)
+    public override void Execute(SceneFlowContext context)
     {
         // ビルド時処理を実装
         var scene = context.Scene;
@@ -80,12 +75,11 @@ public class MyPass : IPass
 ### 依存関係を持つ Pass
 
 ```csharp
-using System.Collections.Generic;
 using TpLab.SceneFlow.Editor.Pass;
 
 public class CollectDataPass : IPass
 {
-    public void Execute(SceneFlowContext context)
+    public override void Execute(SceneFlowContext context)
     {
         Debug.Log("データ収集");
     }
@@ -93,54 +87,40 @@ public class CollectDataPass : IPass
 
 public class ProcessDataPass : IPass
 {
-    // DependencyBuilder を使用（推奨）
-    public IEnumerable<PassDependency> Dependencies => DependencyBuilder
-        .Create()
-        .After<CollectDataPass>()  // CollectDataPass の後に実行
-        .Build();
+    // ConfigureDependencies で依存関係を設定
+    protected override void ConfigureDependencies(DependencyBuilder builder)
+    {
+        builder.After<CollectDataPass>();  // CollectDataPass の後に実行
+    }
 
-    public void Execute(SceneFlowContext context)
+    public override void Execute(SceneFlowContext context)
     {
         Debug.Log("データ処理");
     }
 }
 ```
 
-### DependencyBuilder（推奨）
+### 複雑な依存関係
 
-流暢なメソッドチェーンで依存関係を宣言できます：
+メソッドチェーンで複数の依存関係を宣言できます：
 
 ```csharp
 public class ComplexPass : IPass
 {
-    public IEnumerable<PassDependency> Dependencies => DependencyBuilder
-        .Create()
-        .After<FirstPass>()
-        .After<SecondPass>()
-        .Before<FinalPass>()
-        .After("OtherPackage.ThirdPartyPass, OtherPackage.Editor")  // 他アセンブリ
-        .Build();
+    protected override void ConfigureDependencies(DependencyBuilder builder)
+    {
+        builder
+            .After<FirstPass>()
+            .After<SecondPass>()
+            .Before<FinalPass>()
+            .After("OtherPackage.ThirdPartyPass, OtherPackage.Editor");  // 他アセンブリ
+    }
 
-    public void Execute(SceneFlowContext context)
+    public override void Execute(SceneFlowContext context)
     {
         Debug.Log("複雑な依存関係を持つ処理");
     }
 }
-```
-
-**利点:**
-- 読みやすく、明確な意図表現
-- Type安全性と柔軟性の両立
-- メソッドチェーンで流暢に記述
-
-**従来の配列形式も使用可能:**
-
-```csharp
-public IEnumerable<PassDependency> Dependencies => new[]
-{
-    PassDependency.After<FirstPass>(),
-    PassDependency.Before<FinalPass>()
-};
 ```
 
 ### 他のアセンブリの Pass に依存する場合
@@ -151,21 +131,20 @@ public IEnumerable<PassDependency> Dependencies => new[]
 public class MyPass : IPass
 {
     // ❌ 他のアセンブリの Pass を型参照すると循環参照の危険性
-    // public IEnumerable<PassDependency> Dependencies => DependencyBuilder
-    //     .Create()
-    //     .After<OtherAssembly.SomePass>()
-    //     .Build();
+    // protected override void ConfigureDependencies(DependencyBuilder builder)
+    // {
+    //     builder.After<OtherAssembly.SomePass>();
+    // }
 
     // ✅ 文字列参照を使用（アセンブリ循環参照回避）
-    public IEnumerable<PassDependency> Dependencies => DependencyBuilder
-        .Create()
-        // 完全修飾名で指定
-        .After("OtherNamespace.SomePass")
-        // アセンブリ名を含めることも可能（推奨）
-        .After("OtherNamespace.AnotherPass, OtherAssembly.Editor")
-        .Build();
+    protected override void ConfigureDependencies(DependencyBuilder builder)
+    {
+        builder
+            .After("OtherNamespace.SomePass")  // 完全修飾名で指定
+            .After("OtherNamespace.AnotherPass, OtherAssembly.Editor");  // アセンブリ名含む（推奨）
+    }
 
-    public void Execute(SceneFlowContext context)
+    public override void Execute(SceneFlowContext context)
     {
         Debug.Log("処理");
     }
@@ -185,20 +164,6 @@ public class MyPass : IPass
 
 **他のアセンブリの Pass に依存する場合は、文字列ベースの参照を使用してください。**
 
-```csharp
-// ❌ アセンブリ循環参照の危険性
-public IEnumerable<PassDependency> Dependencies => DependencyBuilder
-    .Create()
-    .After<OtherAssembly.Pass>()
-    .Build();
-
-// ✅ 文字列参照で循環参照を回避
-public IEnumerable<PassDependency> Dependencies => DependencyBuilder
-    .Create()
-    .After("OtherNamespace.Pass, OtherAssembly.Editor")
-    .Build();
-```
-
 **理由:**
 
 - Assembly A が Assembly B の Pass を `After<T>()` で参照 → A が B を参照
@@ -209,118 +174,6 @@ public IEnumerable<PassDependency> Dependencies => DependencyBuilder
 
 ---
 
-## API リファレンス
-
-### SceneFlowContext
-
-Pass の実行時に渡されるコンテキスト
-
-```csharp
-public class SceneFlowContext
-{
-    /// <summary>
-    /// 処理対象のシーン
-    /// </summary>
-    public Scene Scene { get; }
-}
-```
-
-### IPass
-
-```csharp
-public interface IPass
-{
-    /// <summary>
-    /// Pass の依存関係（推奨）
-    /// </summary>
-    IEnumerable<PassDependency> Dependencies => Array.Empty<PassDependency>();
-
-
-    /// <summary>
-    /// Pass 処理を実行する
-    /// </summary>
-    void Execute(SceneFlowContext context);
-}
-```
-
-### DependencyBuilder
-
-Pass の依存関係を流暢に定義するための Builder
-
-```csharp
-public sealed class DependencyBuilder
-{
-    /// <summary>新しい Builder インスタンスを作成</summary>
-    public static DependencyBuilder Create();
-    
-    /// <summary>指定された Pass の後に実行（Type 参照）</summary>
-    public DependencyBuilder After<T>() where T : IPass;
-    public DependencyBuilder After(Type passType);
-    
-    /// <summary>指定された Pass の後に実行（文字列参照）</summary>
-    public DependencyBuilder After(string passTypeName);
-    
-    /// <summary>指定された Pass の前に実行（Type 参照）</summary>
-    public DependencyBuilder Before<T>() where T : IPass;
-    public DependencyBuilder Before(Type passType);
-    
-    /// <summary>指定された Pass の前に実行（文字列参照）</summary>
-    public DependencyBuilder Before(string passTypeName);
-    
-    /// <summary>依存関係のコレクションを構築</summary>
-    public IEnumerable<PassDependency> Build();
-}
-```
-
-### PassDependency
-
-Pass の依存関係を表すクラス
-
-```csharp
-public sealed class PassDependency
-{
-    /// <summary>指定された Pass の後に実行（Type 参照）</summary>
-    public static PassDependency After<T>() where T : IPass;
-    public static PassDependency After(Type passType);
-    public static PassDependency After(string passTypeName);
-    
-    /// <summary>指定された Pass の前に実行（Type 参照）</summary>
-    public static PassDependency Before<T>() where T : IPass;
-    public static PassDependency Before(Type passType);
-    public static PassDependency Before(string passTypeName);
-}
-```
-
-### PassDependency
-
-```csharp
-public sealed class PassDependency
-{
-    // Type 参照（同一アセンブリ内推奨）
-    public static PassDependency After<T>() where T : IPass;
-    public static PassDependency Before<T>() where T : IPass;
-    
-    // 文字列参照（他アセンブリ参照時）
-    public static PassDependency After(string passTypeName);
-    public static PassDependency Before(string passTypeName);
-}
-```
-
-**使用例:**
-
-```csharp
-public IEnumerable<PassDependency> Dependencies => new[]
-{
-    PassDependency.After<SomePass>(),  // Type参照
-    PassDependency.After("Other.Pass, OtherAssembly"),  // 文字列参照
-    PassDependency.Before<AnotherPass>()  // Before指定
-};
-```
-    void Execute(SceneFlowContext context);
-}
-```
-
----
 
 ## デバッグウィンドウ
 
@@ -331,7 +184,7 @@ SceneFlow には Pass の一覧と実行順序を確認するためのデバッ�
 ### 機能
 
 - ✅ Pass の実行順序を一覧表示
-- ✅ 依存関係の確認（クリックで展開）
+- ✅ 依存関係の確認
 - ✅ 検索フィルター
 - ✅ Expand All / Collapse All
 
@@ -345,4 +198,6 @@ SceneFlow には Pass の一覧と実行順序を確認するためのデバッ�
 
 ## ライセンス
 
-MIT License
+MIT License - 詳細は [LICENSE](LICENSE) を参照してください。
+
+Copyright (c) 2025 tp.jp
