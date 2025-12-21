@@ -1,4 +1,3 @@
-using System.Linq;
 using TpLab.SceneFlow.Editor.Internal;
 using UnityEditor;
 
@@ -19,20 +18,12 @@ namespace TpLab.SceneFlow.Editor.Bootstrap
 
         static void RemoveScriptingDefineSymbol()
         {
-            var targetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
-
-            if (defines.Contains(SceneFlowSymbols.SceneFlow))
+            if (DefineSymbolUtility.IsSymbolDefined(SceneFlowSymbols.SceneFlow))
             {
-                var newDefines = defines
-                    .Split(';')
-                    .Where(d => d != SceneFlowSymbols.SceneFlow)
-                    .ToArray();
+                DefineSymbolUtility.SetSymbolForAllPlatforms(SceneFlowSymbols.SceneFlow, false);
+                DefineSymbolUtility.SetSymbolForAllPlatforms(SceneFlowSymbols.EnableLogging, false);
 
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(
-                    targetGroup,
-                    string.Join(";", newDefines)
-                );
+                EditorPrefs.DeleteKey("SceneFlow_LoggingInitialized");
 
                 Logger.Log("SceneFlow scripting define symbol has been removed.");
             }

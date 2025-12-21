@@ -1,6 +1,4 @@
-using System.Linq;
 using UnityEditor;
-using UnityEngine;
 
 namespace TpLab.SceneFlow.Editor.Bootstrap
 {
@@ -23,32 +21,12 @@ namespace TpLab.SceneFlow.Editor.Bootstrap
 
         static void SetLoggingSymbol(bool enable)
         {
-            var targetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
-            var defineList = defines.Split(';').ToList();
-
-            if (enable && !defineList.Contains(SceneFlowSymbols.EnableLogging))
-            {
-                defineList.Add(SceneFlowSymbols.EnableLogging);
-                Debug.Log("SceneFlow logging enabled.");
-            }
-            else if (!enable && defineList.Contains(SceneFlowSymbols.EnableLogging))
-            {
-                defineList.Remove(SceneFlowSymbols.EnableLogging);
-                Debug.Log("SceneFlow logging disabled.");
-            }
-
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(
-                targetGroup,
-                string.Join(";", defineList)
-            );
+            DefineSymbolUtility.SetSymbolForAllPlatforms(SceneFlowSymbols.EnableLogging, enable);
         }
 
         static bool IsLoggingEnabled()
         {
-            var targetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
-            return defines.Contains(SceneFlowSymbols.EnableLogging);
+            return DefineSymbolUtility.IsSymbolDefined(SceneFlowSymbols.EnableLogging);
         }
     }
 }

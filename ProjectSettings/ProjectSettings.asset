@@ -813,7 +813,20 @@ PlayerSettings:
   webGLMemoryGeometricGrowthStep: 0.2
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    Android: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    EmbeddedLinux: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    GameCoreXboxOne: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    Nintendo Switch: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    PS4: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    PS5: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    QNX: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    Stadia: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    Standalone: TPLAB_SCENEFLOW;TPLAB_SCENEFLOW_ENABLE_LOGGING
+    VisionOS: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    WebGL: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    XboxOne: TPLAB_SCENEFLOW_ENABLE_LOGGING
+    tvOS: TPLAB_SCENEFLOW_ENABLE_LOGGING
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}
