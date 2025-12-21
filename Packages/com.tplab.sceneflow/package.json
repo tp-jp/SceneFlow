@@ -1,7 +1,7 @@
 {
   "name": "com.tplab.sceneflow",
   "displayName": "SceneFlow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "unity": "2022.3",
   "description": "Build-time orchestration framework for Unity. Organize and order build-time processing with Pass-based structure and dependency resolution.",
   "gitDependencies": {},

@@ -194,6 +194,12 @@ SceneFlow には Pass の一覧と実行順序を確認するためのデバッ�
 
 ---
 
+## 変更履歴
+
+このプロジェクトの変更履歴については、[CHANGELOG.md](CHANGELOG.md) を参照してください。
+
+---
+
 ## ライセンス
 
 MIT License - 詳細は [LICENSE](LICENSE) を参照してください。
