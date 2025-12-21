@@ -6,7 +6,7 @@ namespace TpLab.SceneFlow.Editor.Bootstrap
     {
         const string MenuPath = "Tools/SceneFlow/Enable Logging";
 
-        [MenuItem(MenuPath, false, 0)]
+        [MenuItem(MenuPath, false)]
         static void EnableLogging()
         {
             SetLoggingSymbol(!IsLoggingEnabled());
