@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using TpLab.SceneFlow.Editor.Bootstrap;
+using TpLab.SceneFlow.Editor.Bootstraps;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-namespace TpLab.SceneFlow.Editor.Internal
+namespace TpLab.SceneFlow.Editor.Internals
 {
     /// <summary>
     /// SceneFlow内部用の簡易ロガー

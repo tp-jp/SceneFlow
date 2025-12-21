@@ -1,6 +1,6 @@
 using UnityEditor;
 
-namespace TpLab.SceneFlow.Editor.Bootstrap
+namespace TpLab.SceneFlow.Editor.Bootstraps
 {
     public static class SceneFlowSettings
     {

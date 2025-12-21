@@ -1,9 +1,9 @@
 using System.Linq;
-using TpLab.SceneFlow.Editor.Internal;
-using TpLab.SceneFlow.Editor.Pass;
+using TpLab.SceneFlow.Editor.Internals;
+using TpLab.SceneFlow.Editor.Passes;
 using UnityEditor;
 
-namespace TpLab.SceneFlow.Editor.Bootstrap
+namespace TpLab.SceneFlow.Editor.Bootstraps
 {
     /// <summary>
     /// SceneFlowの初期化を行うクラス

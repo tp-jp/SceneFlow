@@ -49,8 +49,8 @@ SceneFlow における唯一の拡張単位。
 ### 基本的な Pass の実装
 
 ```csharp
-using TpLab.SceneFlow.Editor.Core;
-using TpLab.SceneFlow.Editor.Pass;
+using TpLab.SceneFlow.Editor.Cores;
+using TpLab.SceneFlow.Editor.Passes;
 using UnityEngine;
 
 public class MyPass : IPass
@@ -67,7 +67,7 @@ public class MyPass : IPass
 ### 依存関係を持つ Pass
 
 ```csharp
-using TpLab.SceneFlow.Editor.Pass;
+using TpLab.SceneFlow.Editor.Passes;
 
 public class CollectDataPass : IPass
 {

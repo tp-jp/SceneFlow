@@ -1,4 +1,4 @@
-namespace TpLab.SceneFlow.Editor.Bootstrap
+namespace TpLab.SceneFlow.Editor.Bootstraps
 {
     /// <summary>
     /// SceneFlowで使用するScripting Define Symbolsの定義

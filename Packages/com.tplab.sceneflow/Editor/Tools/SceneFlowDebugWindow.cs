@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using TpLab.SceneFlow.Editor.Pass;
+using TpLab.SceneFlow.Editor.Passes;
 using UnityEditor;
 using UnityEngine;
 

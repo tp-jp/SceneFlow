@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using TpLab.SceneFlow.Editor.Core;
+using TpLab.SceneFlow.Editor.Cores;
 
-namespace TpLab.SceneFlow.Editor.Pass
+namespace TpLab.SceneFlow.Editor.Passes
 {
     /// <summary>
     /// SceneFlow Pass 基底クラス

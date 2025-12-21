@@ -1,10 +1,10 @@
 using System;
 using System.Linq;
-using TpLab.SceneFlow.Editor.Internal;
-using TpLab.SceneFlow.Editor.Pass;
+using TpLab.SceneFlow.Editor.Internals;
+using TpLab.SceneFlow.Editor.Passes;
 using UnityEngine.SceneManagement;
 
-namespace TpLab.SceneFlow.Editor.Core
+namespace TpLab.SceneFlow.Editor.Cores
 {
     /// <summary>
     /// SceneFlow パイプライン

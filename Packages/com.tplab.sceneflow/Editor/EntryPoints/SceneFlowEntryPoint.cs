@@ -1,9 +1,9 @@
-using TpLab.SceneFlow.Editor.Core;
+using TpLab.SceneFlow.Editor.Cores;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine.SceneManagement;
 
-namespace TpLab.SceneFlow.Editor.EntryPoint
+namespace TpLab.SceneFlow.Editor.EntryPoints
 {
     public class SceneFlowEntryPoint : IProcessSceneWithReport
     {

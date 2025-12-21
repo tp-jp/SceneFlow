@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TpLab.SceneFlow.Editor.Internal;
+using TpLab.SceneFlow.Editor.Internals;
 
-namespace TpLab.SceneFlow.Editor.Pass
+namespace TpLab.SceneFlow.Editor.Passes
 {
     /// <summary>
     /// Pass の依存関係に基づいてトポロジカルソートを行う

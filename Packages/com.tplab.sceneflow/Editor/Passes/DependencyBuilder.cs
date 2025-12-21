@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TpLab.SceneFlow.Editor.Pass
+namespace TpLab.SceneFlow.Editor.Passes
 {
     /// <summary>
     /// Pass の依存関係を流暢に定義するための Builder

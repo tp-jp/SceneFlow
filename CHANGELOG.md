@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-12-21
+
+### Changed
+- **[Breaking]** namespace の複数形化：Unity の標準的な命名規則に準拠するため、すべての namespace を複数形に変更
+
 ## [1.0.3] - 2025-12-21
 
 ### Changed

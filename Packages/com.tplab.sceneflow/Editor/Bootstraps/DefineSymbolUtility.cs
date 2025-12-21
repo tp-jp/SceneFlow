@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 
-namespace TpLab.SceneFlow.Editor.Bootstrap
+namespace TpLab.SceneFlow.Editor.Bootstraps
 {
     /// <summary>
     /// 定義シンボル操作ユーティリティ。

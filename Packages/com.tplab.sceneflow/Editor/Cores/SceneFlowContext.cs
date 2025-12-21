@@ -1,6 +1,6 @@
 using UnityEngine.SceneManagement;
 
-namespace TpLab.SceneFlow.Editor.Core
+namespace TpLab.SceneFlow.Editor.Cores
 {
     /// <summary>
     /// SceneFlow パイプライン実行時のコンテキスト
