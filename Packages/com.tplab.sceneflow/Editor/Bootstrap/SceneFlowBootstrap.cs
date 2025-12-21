@@ -42,7 +42,7 @@ namespace TpLab.SceneFlow.Editor.Bootstrap
             
             foreach (var pass in passes)
             {
-                Logger.LogDebug($"  - {pass.GetType().Name}");
+                Logger.Log($"  - {pass.GetType().Name}");
             }
         }
     }

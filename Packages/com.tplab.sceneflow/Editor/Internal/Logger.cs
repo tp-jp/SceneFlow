@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using TpLab.SceneFlow.Editor.Bootstrap;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -12,32 +13,18 @@ namespace TpLab.SceneFlow.Editor.Internal
         const string Prefix = "[<color=#4EC9B0>SceneFlow</color>]";
 
         /// <summary>
-        /// デバッグログを出力
+        /// ログを出力
         /// </summary>
-        public static void LogDebug(object message)
-        {
-            Debug.Log($"{Prefix} {message}");
-        }
-
-        /// <summary>
-        /// デバッグログを出力
-        /// </summary>
-        public static void LogDebug(object message, Object context)
-        {
-            Debug.Log($"{Prefix} {message}", context);
-        }
-
-        /// <summary>
-        /// 情報ログを出力
-        /// </summary>
+        [Conditional(SceneFlowSymbols.EnableLogging)]
         public static void Log(object message)
         {
             Debug.Log($"{Prefix} {message}");
         }
         
         /// <summary>
-        /// 情報ログを出力
+        /// ログを出力
         /// </summary>
+        [Conditional(SceneFlowSymbols.EnableLogging)]
         public static void Log(object message, Object context)
         {
             Debug.Log($"{Prefix} {message}", context);
