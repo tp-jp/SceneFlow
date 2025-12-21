@@ -5,7 +5,6 @@ namespace TpLab.SceneFlow.Editor.Bootstrap
     /// </summary>
     internal static class SceneFlowSymbols
     {
-        internal const string SceneFlow = "TPLAB_SCENEFLOW";
         internal const string EnableLogging = "TPLAB_SCENEFLOW_ENABLE_LOGGING";
     }
 }

@@ -13,26 +13,11 @@ namespace TpLab.SceneFlow.Editor.Bootstrap
         [InitializeOnLoadMethod]
         static void Initialize()
         {
-            AddScriptingDefineSymbol();
             AddLoggingSymbolOnFirstTime();
             Logger.Log("SceneFlow has been initialized.");
             
             // Pass の事前検証
             ValidatePasses();
-        }
-
-        static void AddScriptingDefineSymbol()
-        {
-            var targetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-            var defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
-            
-            if (!defines.Contains(SceneFlowSymbols.SceneFlow))
-            {
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(
-                    targetGroup, 
-                    defines + ";" + SceneFlowSymbols.SceneFlow
-                );
-            }
         }
 
         static void AddLoggingSymbolOnFirstTime()
