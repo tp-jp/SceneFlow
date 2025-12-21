@@ -2,8 +2,6 @@
 
 Unity の「ビルド時処理」を構造化・順序保証するための最小パイプラインフレームワーク
 
----
-
 ## 概要
 
 SceneFlow は Unity のビルド前処理を Pass 単位で整理し、依存関係に基づいて実行順序を自動解決するフレームワークです。
@@ -25,8 +23,6 @@ SceneFlow はこれを：
 
 で整理します。
 
----
-
 ## 基本コンセプト
 
 ### Pass（最小単位）
@@ -47,8 +43,6 @@ SceneFlow における唯一の拡張単位。
 - `builder.Before(string)`: 文字列で指定（他アセンブリ参照時）
 
 `PassSorter` が依存関係に基づいてトポロジカルソートを実行します。
-
----
 
 ## クイックスタート
 
@@ -154,8 +148,6 @@ public class MyPass : IPass
 - **同一アセンブリ内**: `After<T>()` / `Before<T>()` を使用（タイプセーフ）
 - **他のアセンブリ**: `After(string)` / `Before(string)` を使用（循環回避）
 
----
-
 ## 重要な設計思想
 
 ### ⚠️ アセンブリ循環参照に注意
@@ -170,9 +162,6 @@ public class MyPass : IPass
 
 文字列参照を使うことで、アセンブリ間の直接的な依存を回避できます。
 
----
-
-
 ## デバッグウィンドウ
 
 SceneFlow には Pass の一覧と実行順序を確認するためのデバッグウィンドウが付属しています。
@@ -186,19 +175,13 @@ SceneFlow には Pass の一覧と実行順序を確認するためのデバッ�
 - ✅ 検索フィルター
 - ✅ Expand All / Collapse All
 
----
-
 ## サンプル
 
 詳細なサンプルは `Packages/com.tplab.sceneflow/Samples~/Sample/Editor/SamplePasses.cs` を参照してください。
 
----
-
 ## 変更履歴
 
 このプロジェクトの変更履歴については、[CHANGELOG.md](CHANGELOG.md) を参照してください。
-
----
 
 ## ライセンス
 
