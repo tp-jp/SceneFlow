@@ -74,7 +74,7 @@ namespace TpLab.SceneFlow.Editor.Passes
         /// 指定された Pass の後に実行（Type 参照）
         /// </summary>
         /// <typeparam name="T">依存する Pass の型</typeparam>
-        public static PassDependency After<T>() where T : IPass
+        public static PassDependency After<T>() where T : PassBase
         {
             return new PassDependency(typeof(T), null, Direction.After);
         }
@@ -86,8 +86,8 @@ namespace TpLab.SceneFlow.Editor.Passes
         public static PassDependency After(Type passType)
         {
             if (passType == null) throw new ArgumentNullException(nameof(passType));
-            if (!typeof(IPass).IsAssignableFrom(passType))
-                throw new ArgumentException($"Type {passType.Name} does not implement IPass", nameof(passType));
+            if (!typeof(PassBase).IsAssignableFrom(passType))
+                throw new ArgumentException($"Type {passType.Name} does not inherit from PassBase", nameof(passType));
             
             return new PassDependency(passType, null, Direction.After);
         }
@@ -108,7 +108,7 @@ namespace TpLab.SceneFlow.Editor.Passes
         /// 指定された Pass の前に実行（Type 参照）
         /// </summary>
         /// <typeparam name="T">依存される Pass の型</typeparam>
-        public static PassDependency Before<T>() where T : IPass
+        public static PassDependency Before<T>() where T : PassBase
         {
             return new PassDependency(typeof(T), null, Direction.Before);
         }
@@ -120,8 +120,8 @@ namespace TpLab.SceneFlow.Editor.Passes
         public static PassDependency Before(Type passType)
         {
             if (passType == null) throw new ArgumentNullException(nameof(passType));
-            if (!typeof(IPass).IsAssignableFrom(passType))
-                throw new ArgumentException($"Type {passType.Name} does not implement IPass", nameof(passType));
+            if (!typeof(PassBase).IsAssignableFrom(passType))
+                throw new ArgumentException($"Type {passType.Name} does not inherit from PassBase", nameof(passType));
             
             return new PassDependency(passType, null, Direction.Before);
         }

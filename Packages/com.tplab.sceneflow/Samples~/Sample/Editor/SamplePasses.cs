@@ -1,5 +1,5 @@
-using TpLab.SceneFlow.Editor.Core;
-using TpLab.SceneFlow.Editor.Pass;
+using TpLab.SceneFlow.Editor.Cores;
+using TpLab.SceneFlow.Editor.Passes;
 using UnityEngine;
 
 namespace TpLab.SceneFlow.Samples
@@ -12,8 +12,11 @@ namespace TpLab.SceneFlow.Samples
     /// 環境検証を行う Pass
     /// ビルド前に環境をチェックする用途
     /// </summary>
-    public class EnvironmentValidationPass : IPass
+    public class EnvironmentValidationPass : PassBase
     {
+        // Pass 名をカスタマイズする例
+        public override string DisplayName => "環境検証";
+
         public override void Execute(SceneFlowContext context)
         {
             Debug.Log("[EnvironmentValidationPass] ビルド環境を検証");
@@ -28,7 +31,7 @@ namespace TpLab.SceneFlow.Samples
     /// アセット生成を行う Pass
     /// プロジェクト全体に対する処理
     /// </summary>
-    public class AssetGenerationPass : IPass
+    public class AssetGenerationPass : PassBase
     {
         public override void Execute(SceneFlowContext context)
         {
@@ -44,7 +47,7 @@ namespace TpLab.SceneFlow.Samples
     /// シーン処理を行う Pass
     /// シーン内のオブジェクトを処理
     /// </summary>
-    public class SceneObjectProcessPass : IPass
+    public class SceneObjectProcessPass : PassBase
     {
         public override void Execute(SceneFlowContext context)
         {
@@ -63,7 +66,7 @@ namespace TpLab.SceneFlow.Samples
     /// <summary>
     /// UdonBehaviour を収集する Pass
     /// </summary>
-    public class CollectUdonBehaviourPass : IPass
+    public class CollectUdonBehaviourPass : PassBase
     {
         public override void Execute(SceneFlowContext context)
         {
@@ -76,8 +79,11 @@ namespace TpLab.SceneFlow.Samples
     /// 参照を注入する Pass
     /// CollectUdonBehaviourPass の後に実行される必要がある
     /// </summary>
-    public class InjectReferencePass : IPass
+    public class InjectReferencePass : PassBase
     {
+        // Pass 名をカスタマイズする例
+        public override string DisplayName => "参照注入 (Inject References)";
+
         // ConfigureDependencies で依存関係を設定
         protected override void ConfigureDependencies(DependencyBuilder builder)
         {
@@ -95,7 +101,7 @@ namespace TpLab.SceneFlow.Samples
     /// 検証を行う Pass
     /// InjectReferencePass の後に実行される必要がある
     /// </summary>
-    public class ValidateReferencePass : IPass
+    public class ValidateReferencePass : PassBase
     {
         // ConfigureDependencies で依存関係を設定
         protected override void ConfigureDependencies(DependencyBuilder builder)
@@ -133,7 +139,7 @@ namespace TpLab.SceneFlow.Samples
     /// }
     /// </code>
     /// </summary>
-    public class CrossAssemblyDependentPassExample : IPass
+    public class CrossAssemblyDependentPassExample : PassBase
     {
         // ConfigureDependencies で文字列参照を設定
         protected override void ConfigureDependencies(DependencyBuilder builder)
@@ -161,7 +167,7 @@ namespace TpLab.SceneFlow.Samples
     /// 依存関係がない Pass の例
     /// ConfigureDependencies をオーバーライドしない場合、依存関係なしとして扱われます
     /// </summary>
-    public class DirectInterfaceImplementationPass : IPass
+    public class DirectInterfaceImplementationPass : PassBase
     {
         // ConfigureDependencies をオーバーライドしない = 依存関係なし
 
@@ -175,7 +181,7 @@ namespace TpLab.SceneFlow.Samples
     /// 最適化を行う Pass
     /// 他のすべての処理の後に実行される
     /// </summary>
-    public class OptimizeScenePass : IPass
+    public class OptimizeScenePass : PassBase
     {
         // ConfigureDependencies で複数の依存関係を設定
         protected override void ConfigureDependencies(DependencyBuilder builder)
@@ -201,7 +207,7 @@ namespace TpLab.SceneFlow.Samples
     /// 準備処理を行う Pass
     /// 「Before」を使って他の Pass より前に実行されることを宣言
     /// </summary>
-    public class PreparationPass : IPass
+    public class PreparationPass : PassBase
     {
         // ConfigureDependencies で Before を使用
         // CollectUdonBehaviourPass の「前」に実行されることを宣言

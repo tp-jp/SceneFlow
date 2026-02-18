@@ -30,7 +30,7 @@ namespace TpLab.SceneFlow.Editor.Cores
                 var context = new SceneFlowContext(scene);
 
                 // すべての IPass を検出してソート実行
-                var passList = PassDiscovery.DiscoverPasses<IPass>().ToList();
+                var passList = PassDiscovery.DiscoverPasses<PassBase>().ToList();
                 
                 if (passList.Count == 0)
                 {

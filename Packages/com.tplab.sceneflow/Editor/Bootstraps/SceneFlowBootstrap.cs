@@ -37,7 +37,7 @@ namespace TpLab.SceneFlow.Editor.Bootstraps
 
         static void ValidatePasses()
         {
-            var passes = PassDiscovery.DiscoverPasses<IPass>().ToList();
+            var passes = PassDiscovery.DiscoverPasses<PassBase>().ToList();
             Logger.Log($"Total {passes.Count} pass(es) discovered:");
             foreach (var pass in passes)
             {

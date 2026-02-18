@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.0] - 2026-02-18
+
+### Changed
+- パス基底クラスをIPassからPassBaseに変更
+
 ## [2.0.1] - 2026-01-01
 
 ### Changed

@@ -4,7 +4,7 @@ using TpLab.SceneFlow.Editor.Cores;
 namespace TpLab.SceneFlow.Editor.Passes
 {
     /// <summary>
-    /// SceneFlow Pass 基底クラス
+    /// PassBase 基底クラス
     /// ビルド時に実行される処理の最小単位
     /// 
     /// ■ 実行順序の制御
@@ -16,8 +16,8 @@ namespace TpLab.SceneFlow.Editor.Passes
     /// protected override void ConfigureDependencies(DependencyBuilder builder)
     /// {
     ///     builder
-    ///         .After&lt;SomePass&gt;()  // Type参照（同一アセンブリ推奨）
-    ///         .After("Other.Pass, OtherAssembly")  // 文字列参照（他アセンブリ）
+    ///         .After&lt;SomePass&gt;()  // Type参照(同一アセンブリ推奨)
+    ///         .After("Other.Pass, OtherAssembly")  // 文字列参照(他アセンブリ)
     ///         .Before&lt;AnotherPass&gt;();  // この Pass は AnotherPass の前に実行
     /// }
     /// </code>
@@ -28,9 +28,15 @@ namespace TpLab.SceneFlow.Editor.Passes
     /// - シーン内オブジェクトの処理
     /// - 参照の自動設定
     /// </summary>
-    public abstract class IPass
+    public abstract class PassBase
     {
         IEnumerable<PassDependency> _dependencies;
+
+        /// <summary>
+        /// Pass の表示名を取得
+        /// オーバーライドしない場合は型名を返す
+        /// </summary>
+        public virtual string DisplayName => GetType().Name;
 
         /// <summary>
         /// Pass の依存関係を取得
@@ -76,4 +82,3 @@ namespace TpLab.SceneFlow.Editor.Passes
         public abstract void Execute(SceneFlowContext context);
     }
 }
-

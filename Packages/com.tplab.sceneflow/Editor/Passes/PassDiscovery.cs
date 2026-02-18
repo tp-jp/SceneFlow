@@ -11,9 +11,9 @@ namespace TpLab.SceneFlow.Editor.Passes
     public static class PassDiscovery
     {
         /// <summary>
-        /// IPass を実装した Pass をすべて検出する
+        /// Pass を実装した Pass をすべて検出する
         /// </summary>
-        public static IEnumerable<T> DiscoverPasses<T>() where T : IPass
+        public static IEnumerable<T> DiscoverPasses<T>() where T : PassBase
         {
             var interfaceType = typeof(T);
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();

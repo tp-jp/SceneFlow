@@ -15,7 +15,7 @@ namespace TpLab.SceneFlow.Editor.Passes
         /// </summary>
         /// <param name="passes">ソート対象の Pass リスト</param>
         /// <param name="suppressWarnings">警告を抑制するか（デバッグウィンドウのフィルタリング時など）</param>
-        public static List<T> Sort<T>(IEnumerable<T> passes, bool suppressWarnings = false) where T : IPass
+        public static List<T> Sort<T>(IEnumerable<T> passes, bool suppressWarnings = false) where T : PassBase
         {
             var passList = passes.ToList();
             if (passList.Count == 0) return passList;

@@ -17,11 +17,11 @@ namespace TpLab.SceneFlow.Editor.Tools
         readonly Dictionary<string, bool> _passFoldouts = new Dictionary<string, bool>();
         
         // キャッシュ
-        List<IPass> _cachedPasses;
+        List<PassBase> _cachedPasses;
         bool _needsRefresh = true;
 
         [MenuItem("Tools/SceneFlow/Debug Window")]
-        static void Open()
+        static void ShowWindow()
         {
             GetWindow<SceneFlowDebugWindow>("SceneFlow Debug");
         }
@@ -42,7 +42,7 @@ namespace TpLab.SceneFlow.Editor.Tools
             // Pass リストの取得（キャッシュ使用）
             if (_needsRefresh || _cachedPasses == null)
             {
-                _cachedPasses = PassDiscovery.DiscoverPasses<IPass>().ToList();
+                _cachedPasses = PassDiscovery.DiscoverPasses<PassBase>().ToList();
                 _needsRefresh = false;
             }
 
@@ -97,7 +97,7 @@ namespace TpLab.SceneFlow.Editor.Tools
             EditorGUILayout.EndHorizontal();
         }
 
-        void DrawPassList(List<IPass> passes)
+        void DrawPassList(List<PassBase> passes)
         {
             if (passes == null || passes.Count == 0)
             {
@@ -118,9 +118,11 @@ namespace TpLab.SceneFlow.Editor.Tools
                 {
                     filteredPasses = sorted.Where(p =>
                     {
+                        var displayName = p.DisplayName;
                         var typeName = p.GetType().Name;
                         var fullName = p.GetType().FullName;
-                        return typeName.IndexOf(_searchFilter, System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        return displayName.IndexOf(_searchFilter, System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               typeName.IndexOf(_searchFilter, System.StringComparison.OrdinalIgnoreCase) >= 0 ||
                                (fullName != null && fullName.IndexOf(_searchFilter, System.StringComparison.OrdinalIgnoreCase) >= 0);
                     }).ToList();
                 }
@@ -150,7 +152,7 @@ namespace TpLab.SceneFlow.Editor.Tools
             }
         }
 
-        void DrawTableView(List<IPass> sortedPasses)
+        void DrawTableView(List<PassBase> sortedPasses)
         {
             // テーブルヘッダー
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
@@ -168,16 +170,16 @@ namespace TpLab.SceneFlow.Editor.Tools
             }
         }
 
-        void DrawTableRow(IPass pass, int index)
+        void DrawTableRow(PassBase passBase, int index)
         {
-            var passTypeName = pass.GetType().Name;
-            var passKey = pass.GetType().FullName ?? pass.GetType().Name;
+            var passTypeName = passBase.DisplayName;
+            var passKey = passBase.GetType().FullName ?? passBase.GetType().Name;
             
             // Pass ごとの折りたたみ状態を管理
             _passFoldouts.TryAdd(passKey, false);
             
             // 依存関係の有無を判定
-            var hasDetails = pass.Dependencies.Any();
+            var hasDetails = passBase.Dependencies.Any();
             
             // 背景色（交互）
             var bgColor = index % 2 == 0 
@@ -211,7 +213,7 @@ namespace TpLab.SceneFlow.Editor.Tools
             if (hasDetails && !_passFoldouts[passKey])
             {
                 // 折りたたまれている場合は要約を表示
-                var summary = GetDependencySummary(pass);
+                var summary = GetDependencySummary(passBase);
                 EditorGUILayout.LabelField(summary, EditorStyles.miniLabel, GUILayout.MinWidth(150));
             }
             else if (hasDetails)
@@ -230,11 +232,11 @@ namespace TpLab.SceneFlow.Editor.Tools
             // 詳細行（展開時のみ）
             if (hasDetails && _passFoldouts[passKey])
             {
-                DrawDependencyDetailsInline(pass, bgColor);
+                DrawDependencyDetailsInline(passBase, bgColor);
             }
         }
 
-        void DrawDependencyDetailsInline(IPass pass, Color bgColor)
+        void DrawDependencyDetailsInline(PassBase passBase, Color bgColor)
         {
             using (new EditorGUILayout.VerticalScope())
             {
@@ -249,7 +251,7 @@ namespace TpLab.SceneFlow.Editor.Tools
                     using (new EditorGUILayout.VerticalScope())
                     {
                         // 新API: Dependencies
-                        var dependencies = pass.Dependencies.ToList();
+                        var dependencies = passBase.Dependencies.ToList();
                         if (dependencies.Any())
                         {
                             var afterDeps = dependencies
@@ -277,11 +279,11 @@ namespace TpLab.SceneFlow.Editor.Tools
             }
         }
 
-        string GetDependencySummary(IPass pass)
+        string GetDependencySummary(PassBase passBase)
         {
             var parts = new List<string>();
             
-            var dependencies = pass.Dependencies.ToList();
+            var dependencies = passBase.Dependencies.ToList();
             var afterCount = dependencies.Count(d => d.Relation == PassDependency.Direction.After);
             var beforeCount = dependencies.Count(d => d.Relation == PassDependency.Direction.Before);
             

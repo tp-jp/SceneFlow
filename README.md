@@ -53,7 +53,7 @@ using TpLab.SceneFlow.Editor.Cores;
 using TpLab.SceneFlow.Editor.Passes;
 using UnityEngine;
 
-public class MyPass : IPass
+public class MyPass : PassBase
 {
     public override void Execute(SceneFlowContext context)
     {
@@ -64,12 +64,31 @@ public class MyPass : IPass
 }
 ```
 
+### Pass 名のカスタマイズ
+
+デフォルトでは Pass の型名が表示されますが、`DisplayName` プロパティをオーバーライドすることでカスタマイズできます：
+
+```csharp
+public class EnvironmentValidationPass : PassBase
+{
+    // デバッグウィンドウでの表示名をカスタマイズ
+    public override string DisplayName => "環境検証";
+
+    public override void Execute(SceneFlowContext context)
+    {
+        Debug.Log("環境を検証");
+    }
+}
+```
+
+これにより、デバッグウィンドウやログで分かりやすい名前を表示できます。
+
 ### 依存関係を持つ Pass
 
 ```csharp
 using TpLab.SceneFlow.Editor.Passes;
 
-public class CollectDataPass : IPass
+public class CollectDataPass : PassBase
 {
     public override void Execute(SceneFlowContext context)
     {
@@ -77,7 +96,7 @@ public class CollectDataPass : IPass
     }
 }
 
-public class ProcessDataPass : IPass
+public class ProcessDataPass : PassBase
 {
     // ConfigureDependencies で依存関係を設定
     protected override void ConfigureDependencies(DependencyBuilder builder)
@@ -97,7 +116,7 @@ public class ProcessDataPass : IPass
 メソッドチェーンで複数の依存関係を宣言できます：
 
 ```csharp
-public class ComplexPass : IPass
+public class ComplexPass : PassBase
 {
     protected override void ConfigureDependencies(DependencyBuilder builder)
     {
@@ -120,7 +139,7 @@ public class ComplexPass : IPass
 **アセンブリ循環参照を避けるため、文字列ベースの参照を使用してください。**
 
 ```csharp
-public class MyPass : IPass
+public class MyPass : PassBase
 {
     // ❌ 他のアセンブリの Pass を型参照すると循環参照の危険性
     // protected override void ConfigureDependencies(DependencyBuilder builder)

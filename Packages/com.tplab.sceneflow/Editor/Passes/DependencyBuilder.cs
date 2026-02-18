@@ -29,7 +29,7 @@ namespace TpLab.SceneFlow.Editor.Passes
         /// <summary>
         /// 指定された Pass の後に実行（Type 参照）
         /// </summary>
-        public DependencyBuilder After<T>() where T : IPass
+        public DependencyBuilder After<T>() where T : PassBase
         {
             _dependencies.Add(PassDependency.After<T>());
             return this;
@@ -56,7 +56,7 @@ namespace TpLab.SceneFlow.Editor.Passes
         /// <summary>
         /// 指定された Pass の前に実行（Type 参照）
         /// </summary>
-        public DependencyBuilder Before<T>() where T : IPass
+        public DependencyBuilder Before<T>() where T : PassBase
         {
             _dependencies.Add(PassDependency.Before<T>());
             return this;
