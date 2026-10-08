@@ -63,4 +63,7 @@ Assets/PackageMakerWindowData.asset*
 .idea
 .vscode
 
+# Unity user-specific settings
+/UserSettings/
+
 /[Aa]ssets/
