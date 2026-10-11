@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace TpLab.SceneFlow.Editor.Cores
 {
+    /// <summary>
+    /// Pass間で型付きデータを共有するためのストア。
+    /// </summary>
     public sealed class SceneFlowDataStore
     {
         readonly Dictionary<Type, object> _values = new Dictionary<Type, object>();
