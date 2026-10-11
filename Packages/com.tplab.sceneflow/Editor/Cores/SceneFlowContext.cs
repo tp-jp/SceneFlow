@@ -14,6 +14,11 @@ namespace TpLab.SceneFlow.Editor.Cores
         public Scene Scene { get; }
 
         /// <summary>
+        /// Pass間でデータを共有するためのデータストア
+        /// </summary>
+        public SceneFlowDataStore Data { get; } = new SceneFlowDataStore();
+
+        /// <summary>
         /// コンストラクタ
         /// </summary>
         /// <param name="scene">処理対象のシーン</param>
