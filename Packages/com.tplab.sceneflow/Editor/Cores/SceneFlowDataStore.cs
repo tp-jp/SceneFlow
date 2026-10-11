@@ -17,7 +17,7 @@ namespace TpLab.SceneFlow.Editor.Cores
         /// <param name="value">登録するデータ。</param>
         /// <exception cref="ArgumentNullException">データがnullの場合。</exception>
         /// <exception cref="InvalidOperationException">同じ型のデータが既に登録されている場合。</exception>
-        public void Set<T>(T value) where T : class
+        public void Add<T>(T value) where T : class
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
 
